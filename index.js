@@ -4,58 +4,96 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const rateLimit = require("express-rate-limit");
-const morgan = require("morgan"); // ✅ Optional logging
-require("dotenv").config();
+const morgan = require("morgan");
+const dotenv = require("dotenv");
+const Joi = require("joi");
+const helmet = require("helmet");
+const MongoStore = require("connect-mongo");
 
+const sanitize = require("./middlewares/sanitize"); // custom sanitizer
+
+dotenv.config();
 const app = express();
 
-// ✅ MongoDB
-mongoose.connect(process.env.MONGO_URI)
+// ✅ Step 1: Validate .env Variables
+const envSchema = Joi.object({
+  MONGO_URI: Joi.string().required(),
+  SESSION_SECRET: Joi.string().min(10).required(),
+  NODE_ENV: Joi.string().valid("development", "production").default("development"),
+  PORT: Joi.number().default(8080),
+}).unknown();
+
+const { error, value: envVars } = envSchema.validate(process.env);
+if (error) {
+  console.error("❌ Invalid .env configuration:", error.message);
+  process.exit(1);
+}
+
+// ✅ Step 2: Connect MongoDB
+mongoose.connect(envVars.MONGO_URI)
   .then(() => console.log("✅ MongoDB connected"))
-  .catch(err => console.error("❌ MongoDB connection error:", err));
+  .catch(err => {
+    console.error("❌ MongoDB connection error:", err);
+    process.exit(1);
+  });
 
-// ✅ Optional Logging Middleware
-app.use(morgan("dev")); // Logs method, URL, and response time
+// ✅ Step 3: Logging
+app.use(morgan("dev"));
 
-// ✅ Rate Limiting: Protect login routes
+// ✅ Step 4: Helmet (CSP disabled)
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
+
+// ✅ Step 5: Rate Limiting on Admin Login
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 mins
+  windowMs: 15 * 60 * 1000,
   max: 10,
-  message: "⚠ Too many login attempts. Please try again later."
+  message: "⚠ Too many login attempts. Please try again later.",
+  standardHeaders: true,
+  legacyHeaders: false
 });
 app.use("/admin-portal-1024/login-secret", loginLimiter);
 
-// ✅ Session: Persistent & secure
+// ✅ Step 6: Session Handling
 app.use(session({
-  secret: process.env.SESSION_SECRET || "keyboard_cat",
+  secret: envVars.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  rolling: true,
+  store: MongoStore.create({
+    mongoUrl: envVars.MONGO_URI,
+    collectionName: "adminSessions",
+    ttl: 7 * 24 * 60 * 60 // 7 days
+  }),
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // true in production (HTTPS)
+    secure: envVars.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000 // ✅ 7 days persistence
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   }
 }));
 
-// ✅ Core Middleware
+// ✅ Step 7: Parsing and Sanitizing Input
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(sanitize); // 👈 custom input sanitizer
 
-// ✅ Views and static
+// ✅ Step 8: Views and Static Files
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 
-// ✅ Routes
+// ✅ Step 9: Routes
 const paymentRoutes = require("./routes/payments.routes");
 const adminRoutes = require("./routes/admin.routes");
 
 app.use("/api", paymentRoutes);
 app.use("/admin-portal-1024", adminRoutes);
 
-// ✅ Page Routes
+// ✅ Step 10: Frontend Pages
 app.get("/", (req, res) => res.render("home"));
 app.get("/product", (req, res) => res.render("product"));
 app.get("/form", (req, res) => res.render("form"));
@@ -63,13 +101,13 @@ app.get("/about", (req, res) => res.render("about"));
 app.get("/reviews", (req, res) => res.render("reviews"));
 app.get("/T&C", (req, res) => res.render("T&C"));
 
-// ✅ 404 Handler
+// ✅ Step 11: 404 Page
 app.use((req, res) => {
   res.status(404).render("404", { title: "Page Not Found" });
 });
 
-// ✅ Start server
-const PORT = process.env.PORT || 8080;
+// ✅ Step 12: Start Server
+const PORT = envVars.PORT;
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });

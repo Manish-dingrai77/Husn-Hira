@@ -7,18 +7,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
-
-    body {
-      background: #f9f9f9;
-      overflow-x: hidden;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body { background: #f9f9f9; overflow-x: hidden; }
 
     header {
       display: flex;
@@ -65,9 +57,7 @@
       transition: 0.3s ease;
     }
 
-    nav a i {
-      margin-right: 0.5rem;
-    }
+    nav a i { margin-right: 0.5rem; }
 
     nav a:hover, nav a.active {
       background: white;
@@ -84,9 +74,73 @@
       font-weight: 600;
     }
 
-    .container {
-      padding: 2rem;
+    .menu-toggle {
+      display: none;
+      font-size: 1.5rem;
+      color: white;
+      background: none;
+      border: none;
     }
+
+    .mobile-nav {
+      display: none;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: -100%;
+      width: 70%;
+      height: 100vh;
+      background: #ff6b8b;
+      padding: 2rem;
+      transition: left 0.3s ease;
+      z-index: 1000;
+    }
+
+    .mobile-nav.active { left: 0; }
+
+    .mobile-nav .close-btn {
+      align-self: flex-end;
+      font-size: 1.5rem;
+      color: white;
+      background: none;
+      border: none;
+      margin-bottom: 2rem;
+    }
+
+    .mobile-nav a { margin-bottom: 1rem; }
+
+    @media (max-width: 768px) {
+      nav { display: none; }
+      .menu-toggle { display: block; }
+    }
+
+    .container { padding: 2rem; }
+
+    .chart-box {
+      background: #fff;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .export-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .export-buttons a {
+      padding: 0.6rem 1rem;
+      background: #4caf50;
+      color: white;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .export-buttons a:hover { background: #388e3c; }
 
     .search-form {
       display: flex;
@@ -95,8 +149,7 @@
       margin-bottom: 1.5rem;
     }
 
-    .search-form input,
-    .search-form button {
+    .search-form input, .search-form button {
       padding: 0.6rem;
       border: 1px solid #ccc;
       border-radius: 5px;
@@ -110,9 +163,7 @@
       transition: 0.3s;
     }
 
-    .search-form button:hover {
-      background: #e65576;
-    }
+    .search-form button:hover { background: #e65576; }
 
     .clear-history-btn {
       background: #f44336;
@@ -139,13 +190,9 @@
       box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     }
 
-    .card h3 {
-      margin-top: 0;
-    }
+    .card h3 { margin-top: 0; }
 
-    .info {
-      margin: 0.3rem 0;
-    }
+    .info { margin: 0.3rem 0; }
 
     .btns button {
       margin-right: 10px;
@@ -157,62 +204,8 @@
       font-weight: bold;
     }
 
-    .cancel {
-      background: #f44336;
-    }
-
-    .deliver {
-      background: #4caf50;
-    }
-
-    .menu-toggle {
-      display: none;
-      font-size: 1.5rem;
-      color: white;
-      background: none;
-      border: none;
-    }
-
-    .mobile-nav {
-      display: none;
-      flex-direction: column;
-      position: fixed;
-      top: 0;
-      left: -100%;
-      width: 70%;
-      height: 100vh;
-      background: #ff6b8b;
-      padding: 2rem;
-      transition: left 0.3s ease;
-      z-index: 1000;
-    }
-
-    .mobile-nav.active {
-      left: 0;
-    }
-
-    .mobile-nav .close-btn {
-      align-self: flex-end;
-      font-size: 1.5rem;
-      color: white;
-      background: none;
-      border: none;
-      margin-bottom: 2rem;
-    }
-
-    .mobile-nav a {
-      margin-bottom: 1rem;
-    }
-
-    @media (max-width: 768px) {
-      nav {
-        display: none;
-      }
-
-      .menu-toggle {
-        display: block;
-      }
-    }
+    .cancel { background: #f44336; }
+    .deliver { background: #4caf50; }
   </style>
 </head>
 <body>
@@ -245,93 +238,159 @@
   </div>
 
   <div class="container">
-   <!-- EJS card rendering logic starts here -->
-<form method="GET" action="" class="search-form">
-  <input type="text" name="search" placeholder="Search by name, mobile, or order ID" value="<%= typeof search !== 'undefined' ? search : '' %>" />
-  <input type="date" name="date" value="<%= typeof selectedDate !== 'undefined' ? selectedDate : '' %>" />
-  <button type="submit">Search/Filter</button>
-</form>
-
-<% if (currentTab === 'done') { %>
-  <form method="POST" action="/admin-portal-1024/clear-history" onsubmit="return confirm('Clear all history?')">
-    <button type="submit" class="clear-history-btn">Clear Database</button>
-  </form>
-<% } %>
-
-<% if (orders.length === 0) { %>
-  <p>No orders found.</p>
-<% } else { %>
-  <% orders.forEach(order => { %>
-    <div class="card">
-      <h3><%= order.name %></h3>
-      <p class="info"><strong>Address:</strong> <%= order.address %></p>
-      <p class="info"><strong>Mobile:</strong> <%= order.mobile_number %></p>
-      <% if (order.alternate_number) { %>
-        <p class="info"><strong>Alt Number:</strong> <%= order.alternate_number %></p>
-      <% } %>
-      <p class="info"><strong>Order ID:</strong> <%= order.order_id %></p>
-      <p class="info"><strong>Txn ID:</strong> <%= order.payment_id %></p>
-      <p class="info"><strong>Coupon:</strong> <%= order.coupon || 'None' %></p>
-      <p class="info"><strong>Ordered On:</strong> <%= order.date.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) %></p>
-
-      <div class="btns">
-        <% if (currentTab === 'pending') { %>
-          <form method="POST" action="/admin-portal-1024/cancel/<%= order._id %>" onsubmit="return confirm('Cancel this order?')" style="display:inline;">
-            <button type="submit" class="cancel">Cancel</button>
-          </form>
-          <form method="POST" action="/admin-portal-1024/deliver/<%= order._id %>" onsubmit="return confirm('Mark as delivering?')" style="display:inline;">
-            <button type="submit" class="deliver">Deliver</button>
-          </form>
-        <% } else if (currentTab === 'delivering') { %>
-          <form method="POST" action="/admin-portal-1024/cancel/<%= order._id %>" onsubmit="return confirm('Cancel this delivery?')" style="display:inline;">
-            <button type="submit" class="cancel">Cancel</button>
-          </form>
-          <form method="POST" action="/admin-portal-1024/done/<%= order._id %>" onsubmit="return confirm('Mark as done?')" style="display:inline;">
-            <button type="submit" class="deliver">Done</button>
-          </form>
-        <% } else if (currentTab === 'done') { %>
-          <form method="POST" action="/admin-portal-1024/delete/<%= order._id %>" onsubmit="return confirm('Delete this record?')" style="display:inline;">
-            <button type="submit" class="cancel">Delete</button>
-          </form>
-        <% } %>
+    
+  <!-- ✅ Insert this block below -->
+  <div style="display: flex; flex-wrap: wrap; gap: 2rem; margin-bottom: 2rem;">
+    <% if (currentTab === 'pending') { %>
+      <div style="flex: 1; min-width: 220px; background: #fff; padding: 1rem 1.5rem; border-left: 6px solid #ff6b8b; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <h2 style="margin-bottom: 0.5rem;">📦 Total Orders</h2>
+        <p style="font-size: 1.8rem; font-weight: 600; color: #333;"><%= orders.length %></p>
       </div>
-    </div>
-  <% }) %>
-<% } %>
+    <% } else if (currentTab === 'delivering') { %>
+      <div style="flex: 1; min-width: 220px; background: #fff; padding: 1rem 1.5rem; border-left: 6px solid #4caf50; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <h2 style="margin-bottom: 0.5rem;">🚚 Delivering</h2>
+        <p style="font-size: 1.8rem; font-weight: 600; color: #333;"><%= orders.length %></p>
+      </div>
+    <% } else if (currentTab === 'done') { %>
+      <div style="flex: 1; min-width: 220px; background: #fff; padding: 1rem 1.5rem; border-left: 6px solid #555; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <h2 style="margin-bottom: 0.5rem;">✅ Completed</h2>
+        <p style="font-size: 1.8rem; font-weight: 600; color: #333;"><%= orders.length %></p>
+      </div>
+    <% } %>
+  </div>
+    <% if (chartData) { %>
+      <div id="chart-data"
+           data-labels='<%- JSON.stringify(chartData.labels || []) %>'
+           data-orders='<%- JSON.stringify(chartData.orders || []) %>'
+           data-revenue='<%- JSON.stringify(chartData.revenue || []) %>'>
+      </div>
+      <div class="chart-box">
+        <canvas id="orderChart" height="100"></canvas>
+      </div>
+    <% } %>
 
+    <div class="export-buttons">
+      <a href="/admin-portal-1024/export/csv?type=all">Export All Orders</a>
+      <a href="/admin-portal-1024/export/csv?type=delivered">Export Delivered</a>
+      <a href="/admin-portal-1024/export/csv?type=done">Export Completed</a>
+    </div>
+
+    <form method="GET" action="" class="search-form">
+      <input type="text" name="search" placeholder="Search by name, mobile, or order ID" value="<%= search || '' %>" />
+      <input type="date" name="date" value="<%= selectedDate || '' %>" />
+      <button type="submit">Search/Filter</button>
+    </form>
+
+    <% if (currentTab === 'done') { %>
+      <form method="POST" action="/admin-portal-1024/clear-history" onsubmit="return confirm('Clear all history?')">
+        <button type="submit" class="clear-history-btn">Clear Database</button>
+      </form>
+    <% } %>
+
+    <% if (orders.length === 0) { %>
+      <p>No orders found.</p>
+    <% } else { %>
+      <% orders.forEach(order => { %>
+        <div class="card">
+          <h3><%= order.name %></h3>
+          <p class="info"><strong>Address:</strong> <%= order.address %></p>
+          <p class="info"><strong>Mobile:</strong> <%= order.mobile_number %></p>
+          <% if (order.alternate_number) { %>
+            <p class="info"><strong>Alt Number:</strong> <%= order.alternate_number %></p>
+          <% } %>
+          <p class="info"><strong>Order ID:</strong> <%= order.order_id %></p>
+          <p class="info"><strong>Txn ID:</strong> <%= order.payment_id %></p>
+          <p class="info"><strong>Coupon:</strong> <%= order.coupon || 'None' %></p>
+          <p class="info"><strong>Ordered On:</strong> <%= order.date.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) %></p>
+          <div class="btns">
+            <% if (currentTab === 'pending') { %>
+              <form method="POST" action="/admin-portal-1024/cancel/<%= order._id %>" style="display:inline;" onsubmit="return confirm('Cancel this order?')">
+                <button type="submit" class="cancel">Cancel</button>
+              </form>
+              <form method="POST" action="/admin-portal-1024/deliver/<%= order._id %>" style="display:inline;" onsubmit="return confirm('Mark as delivering?')">
+                <button type="submit" class="deliver">Deliver</button>
+              </form>
+            <% } else if (currentTab === 'delivering') { %>
+              <form method="POST" action="/admin-portal-1024/cancel/<%= order._id %>" style="display:inline;" onsubmit="return confirm('Cancel this delivery?')">
+                <button type="submit" class="cancel">Cancel</button>
+              </form>
+              <form method="POST" action="/admin-portal-1024/done/<%= order._id %>" style="display:inline;" onsubmit="return confirm('Mark as done?')">
+                <button type="submit" class="deliver">Done</button>
+              </form>
+            <% } else if (currentTab === 'done') { %>
+              <form method="POST" action="/admin-portal-1024/delete/<%= order._id %>" style="display:inline;" onsubmit="return confirm('Delete this record?')">
+                <button type="submit" class="cancel">Delete</button>
+              </form>
+            <% } %>
+          </div>
+        </div>
+      <% }) %>
+    <% } %>
   </div>
 
- <script>
-  const successMessage = "<%= typeof successMessage !== 'undefined' ? successMessage : '' %>";
-  const errorMessage = "<%= typeof errorMessage !== 'undefined' ? errorMessage : '' %>";
+  <% if (chartData) { %>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const chartEl = document.getElementById('chart-data');
+        const labels = JSON.parse(chartEl.dataset.labels || '[]');
+        const orders = JSON.parse(chartEl.dataset.orders || '[]');
+        const revenue = JSON.parse(chartEl.dataset.revenue || '[]');
 
-   const mobileNav = document.querySelector('.mobile-nav');
-  const links = document.querySelectorAll('.mobile-nav a');
+        const ctx = document.getElementById('orderChart').getContext('2d');
 
-  links.forEach(link => {
-    link.addEventListener('click', () => {
-      mobileNav.classList.remove('active');
-    });
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Orders',
+                data: orders,
+                borderColor: '#ff6b8b',
+                backgroundColor: '#ff6b8b33',
+                fill: true,
+                tension: 0.4
+              },
+              {
+                label: 'Revenue',
+                data: revenue,
+                borderColor: '#4caf50',
+                backgroundColor: '#4caf5033',
+                fill: true,
+                tension: 0.4
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: '#444' } }
+            },
+            scales: {
+              x: { ticks: { color: '#666' } },
+              y: { ticks: { color: '#666' } }
+            }
+          }
+        });
+      });
+
+      window.addEventListener("load", () => {
+    const cleanKey = "cleanReloaded";
+
+    // Only clear query params if it's a manual refresh (not after search)
+    if (window.performance && performance.navigation.type === performance.navigation.TYPE_RELOAD) {
+      if (window.location.search && !sessionStorage.getItem(cleanKey)) {
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        sessionStorage.setItem(cleanKey, "true");
+        location.reload();
+      }
+    } else {
+      sessionStorage.removeItem(cleanKey);
+    }
   });
-
-  if (successMessage) {
-    Swal.fire({
-      icon: 'success',
-      title: 'Success!',
-      text: successMessage,
-      confirmButtonColor: '#ff6b8b'
-    });
-  }
-
-  if (errorMessage) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Oops!',
-      text: errorMessage,
-      confirmButtonColor: '#f44336'
-    });
-  }
-</script>
-
+    </script>
+  <% } %>
 </body>
 </html>
