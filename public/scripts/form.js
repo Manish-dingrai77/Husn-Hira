@@ -38,7 +38,7 @@ document.getElementById("buy-form").addEventListener("submit", async function (e
     return Swal.fire('Terms Not Accepted', 'Please accept the Terms & Conditions to proceed.', 'warning');
   }
 
-  // Create order via backend
+  // Create Razorpay Order via backend
   const response = await fetch("/api/createOrder", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -59,7 +59,7 @@ document.getElementById("buy-form").addEventListener("submit", async function (e
 
   // Razorpay Checkout
   const options = {
-    key: "rzp_test_ktweM0GM157h7A", // ✅ Replace with your test/live key
+    key: "rzp_test_ktweM0GM157h7A", // ✅ Replace with your live key in production
     amount: order.amount,
     currency: "INR",
     name: "Husn Hira",
@@ -67,10 +67,16 @@ document.getElementById("buy-form").addEventListener("submit", async function (e
     image: "/Assets/logo.png",
     order_id: order.id,
     handler: async function (response) {
+      // ✅ Send full details again for DB save
       const verify = await fetch("/api/verifyPayment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          name,
+          address,
+          mobile_number: mobile,
+          alternate_number: alternate,
+          coupon,
           order_id: order.id,
           payment_id: response.razorpay_payment_id,
           signature: response.razorpay_signature,
