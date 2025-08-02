@@ -1,7 +1,8 @@
 const { createRazorpayInstance } = require("../config/razorpay.config");
 const crypto = require("crypto");
 const { validationResult } = require("express-validator");
-const Order = require("../models/order"); // Make sure this path is correct
+const Order = require("../models/order");
+const sendOrderSMS = require("../utils/sendSMS"); // ✅ Import SMS sender
 require("dotenv").config();
 
 const razorpayInstance = createRazorpayInstance();
@@ -40,7 +41,7 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// ✅ Verify Payment & Save Order
+// ✅ Verify Payment & Save Order + Send SMS
 exports.verifyPayment = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -80,14 +81,23 @@ exports.verifyPayment = async (req, res) => {
       coupon,
       order_id,
       payment_id,
-      status: "pending", // initial status for admin tracking
+      status: "pending",
     });
 
     await newOrder.save();
 
+    // ✅ Send SMS after order is saved
+    await sendOrderSMS({
+      to: mobile_number.startsWith("+") ? mobile_number : "+91" + mobile_number,
+      name,
+      address,
+      txnId: payment_id,
+      orderId: order_id,
+    });
+
     return res.status(200).json({
       success: true,
-      msg: "Payment verified and order saved",
+      msg: "Payment verified, order saved, SMS sent",
     });
   } catch (err) {
     console.error("❌ Signature verification or DB save error:", err);
