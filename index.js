@@ -9,13 +9,15 @@ const dotenv = require("dotenv");
 const Joi = require("joi");
 const helmet = require("helmet");
 const MongoStore = require("connect-mongo");
-
-const sanitize = require("./middlewares/sanitize"); // custom sanitizer
+const sanitize = require("./middlewares/sanitize");
 
 dotenv.config();
 const app = express();
 
-// ✅ Step 1: Validate .env Variables
+// ✅ Trust proxy for Render deployment
+app.set("trust proxy", 1);
+
+// ✅ Step 1: Validate Environment Variables
 const envSchema = Joi.object({
   MONGO_URI: Joi.string().required(),
   SESSION_SECRET: Joi.string().min(10).required(),
@@ -40,13 +42,13 @@ mongoose.connect(envVars.MONGO_URI)
 // ✅ Step 3: Logging
 app.use(morgan("dev"));
 
-// ✅ Step 4: Helmet (CSP disabled)
+// ✅ Step 4: Helmet
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
 }));
 
-// ✅ Step 5: Rate Limiting on Admin Login
+// ✅ Step 5: Rate Limiting
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -65,23 +67,23 @@ app.use(session({
   store: MongoStore.create({
     mongoUrl: envVars.MONGO_URI,
     collectionName: "adminSessions",
-    ttl: 7 * 24 * 60 * 60 // 7 days
+    ttl: 7 * 24 * 60 * 60
   }),
   cookie: {
     httpOnly: true,
     secure: envVars.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000
   }
 }));
 
-// ✅ Step 7: Parsing and Sanitizing Input
+// ✅ Step 7: Middleware
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(sanitize); // 👈 custom input sanitizer
+app.use(sanitize); // custom sanitization logic
 
-// ✅ Step 8: Views and Static Files
+// ✅ Step 8: Static Files & Views
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
@@ -93,7 +95,7 @@ const adminRoutes = require("./routes/admin.routes");
 app.use("/api", paymentRoutes);
 app.use("/admin-portal-1024", adminRoutes);
 
-// ✅ Step 10: Frontend Pages
+// ✅ Step 10: Page Routes
 app.get("/", (req, res) => res.render("home"));
 app.get("/product", (req, res) => res.render("product"));
 app.get("/form", (req, res) => res.render("form"));
@@ -101,13 +103,19 @@ app.get("/about", (req, res) => res.render("about"));
 app.get("/reviews", (req, res) => res.render("reviews"));
 app.get("/T&C", (req, res) => res.render("T&C"));
 
-// ✅ Step 11: 404 Page
+// ✅ Step 11: Health Check
+app.get("/health", (req, res) => res.send("OK"));
+
+// ✅ Step 12: 404 Fallback
 app.use((req, res) => {
+  if (req.path.startsWith("/api")) {
+    return res.status(404).json({ error: "API route not found" });
+  }
   res.status(404).render("404", { title: "Page Not Found" });
 });
 
-// ✅ Step 12: Start Server
+// ✅ Step 13: Start Server
 const PORT = envVars.PORT;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
