@@ -119,7 +119,7 @@ exports.getLoginPage = (req, res) => {
 exports.login = (req, res) => {
   const { username, password } = req.body;
   if (username === ADMIN_USER && password === ADMIN_PASS) {
-    req.session.adminLoggedIn = true;  // consistent key
+   req.session.isAdmin = true;  
     return res.redirect("/admin-portal-1024/dashboard");
   }
   res.render("login", { error: "Invalid credentials" });

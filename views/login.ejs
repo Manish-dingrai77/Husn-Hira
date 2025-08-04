@@ -25,9 +25,12 @@
     <div class="login-box">
       <h2>Admin Login</h2>
 
-      <div class="error" style="display: none;">
-        <i class="fas fa-exclamation-circle"></i> Incorrect username or password
-      </div>
+     <% if (error) { %>
+  <div class="error">
+    <i class="fas fa-exclamation-circle"></i> <%= error %>
+  </div>
+<% } %>
+
 
       <form id="loginForm" action="/admin-portal-1024/login-secret" method="POST">
         <div class="input-group">
