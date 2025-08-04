@@ -691,3 +691,18 @@ footer {
 .buy-btn:hover {
   background: #e85d7a;
 }
+
+.cod-note {
+  font-size: 14px;
+  color: #444;
+  margin-top: 10px;
+  background: #fff7e6;
+  padding: 10px 12px;
+  border-left: 4px solid #f0a500;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.hidden {
+  display: none;
+}

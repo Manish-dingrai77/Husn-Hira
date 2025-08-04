@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const { createRazorpayInstance } = require("../config/razorpay.config");
 const crypto = require("crypto");
 const { Parser } = require("json2csv");
+const ExcelJS = require("exceljs");
 require("dotenv").config();
 
 const razorpayInstance = createRazorpayInstance();
@@ -10,7 +11,7 @@ const razorpayInstance = createRazorpayInstance();
 const ADMIN_USER = process.env.ADMIN_USER;
 const ADMIN_PASS = process.env.ADMIN_PASS;
 
-// ✅ Middleware: Admin auth check
+// Middleware: Admin auth check
 exports.isAuthenticated = (req, res, next) => {
   if (req.session && req.session.adminLoggedIn) {
     console.log("✅ Authenticated as admin");
@@ -20,10 +21,10 @@ exports.isAuthenticated = (req, res, next) => {
   return res.redirect("/admin-portal-1024/login-secret");
 };
 
-// ✅ Escape input for RegExp
+// Escape input for RegExp
 const escapeRegex = (str) => str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
-// ✅ Reusable: Build search + date query
+// Build search + date query
 const buildSearchQuery = (status, search, date) => {
   const query = { status };
 
@@ -33,7 +34,7 @@ const buildSearchQuery = (status, search, date) => {
       { name: regex },
       { mobile_number: regex },
       { orderId: regex },
-      { transactionId: regex }
+      { payment_id: regex }
     ];
   }
 
@@ -47,8 +48,7 @@ const buildSearchQuery = (status, search, date) => {
   return query;
 };
 
-
-// ✅ Create Razorpay order
+// Create Razorpay order
 exports.createOrder = async (req, res) => {
   const { name, address, mobile_number, alternate_number, coupon } = req.body;
   try {
@@ -75,7 +75,7 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// ✅ Verify Razorpay payment and save order
+// Verify Razorpay payment and save order
 exports.verifyPayment = async (req, res) => {
   const { name, address, mobile_number, alternate_number, coupon, order_id, payment_id, signature } = req.body;
   try {
@@ -87,14 +87,18 @@ exports.verifyPayment = async (req, res) => {
       return res.status(400).json({ success: false, msg: "Invalid Payment Signature" });
     }
 
+    const isDiscounted = coupon?.toUpperCase() === "HUSN40";
+    const price = isDiscounted ? 149 : 249;
+
     const newOrder = new Order({
       name,
       address,
       mobile_number,
       alternate_number,
       coupon,
-      order_id,
+      orderId: order_id,
       payment_id,
+      price,
       status: "pending",
       date: new Date()
     });
@@ -107,7 +111,7 @@ exports.verifyPayment = async (req, res) => {
   }
 };
 
-// ✅ Admin Login Pages
+// Admin Login Pages
 exports.getLoginPage = (req, res) => {
   res.render("login", { error: null });
 };
@@ -115,13 +119,11 @@ exports.getLoginPage = (req, res) => {
 exports.login = (req, res) => {
   const { username, password } = req.body;
   if (username === ADMIN_USER && password === ADMIN_PASS) {
-    req.session.isAdmin = true;
-    return res.redirect("/admin-portal-1024/dashboard"); // ✅ correct route
+    req.session.adminLoggedIn = true;  // consistent key
+    return res.redirect("/admin-portal-1024/dashboard");
   }
   res.render("login", { error: "Invalid credentials" });
 };
-
-
 
 exports.logout = (req, res) => {
   req.session.destroy(() => {
@@ -129,7 +131,7 @@ exports.logout = (req, res) => {
   });
 };
 
-// ✅ Chart Aggregation
+// Chart Aggregation
 async function getChartAggregation(status) {
   const aggregation = await Order.aggregate([
     { $match: { status } },
@@ -154,7 +156,7 @@ async function getChartAggregation(status) {
   };
 }
 
-// ✅ Dashboard Tabs
+// Dashboard Tabs
 exports.getDashboard = async (req, res) => {
   try {
     const { search, date } = req.query;
@@ -194,7 +196,7 @@ exports.getDoneOrders = async (req, res) => {
   }
 };
 
-// ✅ Order Status Actions
+// Order Status Actions
 exports.cancelOrder = async (req, res) => {
   try {
     const orderId = req.params.id;
@@ -260,7 +262,7 @@ exports.clearHistory = async (req, res) => {
   }
 };
 
-// ✅ Helper: Redirect path by order status
+// Helper: Redirect path by order status
 function getRedirectPath(status) {
   switch (status) {
     case "delivering": return "/admin-portal-1024/delivering";
@@ -269,7 +271,7 @@ function getRedirectPath(status) {
   }
 }
 
-// ✅ API: External chart data
+// API: External chart data
 exports.getChartData = async (req, res) => {
   try {
     const allOrders = await Order.find().sort({ date: 1 });
@@ -293,7 +295,7 @@ exports.getChartData = async (req, res) => {
   }
 };
 
-// ✅ CSV Export
+// CSV Export
 exports.exportCSV = async (req, res) => {
   try {
     const { type } = req.query;
@@ -310,7 +312,7 @@ exports.exportCSV = async (req, res) => {
 
     const fields = [
       "name", "address", "mobile_number", "alternate_number",
-      "coupon", "order_id", "payment_id", "status", "date"
+      "coupon", "orderId", "payment_id", "status", "date"
     ];
 
     const parser = new Parser({ fields });
@@ -322,5 +324,76 @@ exports.exportCSV = async (req, res) => {
   } catch (err) {
     console.error("❌ CSV Export Failed:", err);
     res.status(500).send("Error exporting CSV");
+  }
+};
+
+// Excel Export
+exports.exportExcel = async (req, res, statusType) => {
+  try {
+    let filter = {};
+    if (statusType === "delivering") {
+      filter.status = "delivering";
+    } else if (statusType === "done") {
+      filter.status = "done";
+    }
+
+    const orders = await Order.find(filter).lean();
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Orders");
+
+    worksheet.columns = [
+      { header: "Name", key: "name", width: 20 },
+      { header: "Address", key: "address", width: 40 },
+      { header: "Mobile Number", key: "mobile_number", width: 15 },
+      { header: "Alternate Number", key: "alternate_number", width: 15 },
+      { header: "Payment Mode", key: "paymentMethod", width: 15 },
+      { header: "Price (₹)", key: "price", width: 12 },
+      { header: "Order ID", key: "orderId", width: 25 },
+      { header: "Transaction ID", key: "payment_id", width: 30 },
+      { header: "Coupon", key: "coupon", width: 15 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "Date", key: "date", width: 25 }
+    ];
+
+    orders.forEach((order) => {
+      worksheet.addRow({
+        name: order.name,
+        address: order.address,
+        mobile_number: order.mobile_number,
+        alternate_number: order.alternate_number || "N/A",
+        paymentMethod: order.paymentMethod || "N/A",
+        price: order.price || (order.coupon?.toUpperCase() === "HUSN40" ? 149 : 249),
+        orderId: order.orderId || order._id.toString(),
+        payment_id: order.payment_id || "N/A",
+        coupon: order.coupon || "Not Applied",
+        status: order.status,
+        date: new Date(order.date).toLocaleString("en-IN")
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).alignment = { vertical: "middle", horizontal: "center" };
+
+    worksheet.eachRow((row) => {
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" }
+        };
+        cell.alignment = { wrapText: true, vertical: "top" };
+      });
+    });
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=orders-${statusType || "all"}.xlsx`);
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error("❌ Excel Export Failed:", err);
+    res.status(500).send("Error exporting Excel file");
   }
 };

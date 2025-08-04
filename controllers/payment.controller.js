@@ -1,8 +1,8 @@
-const { createRazorpayInstance } = require("../config/razorpay.config");
+require("dotenv").config();
 const crypto = require("crypto");
+const { createRazorpayInstance } = require("../config/razorpay.config");
 const Order = require("../models/order");
 const sendOrderSMS = require("../utils/sendSMS");
-require("dotenv").config();
 
 const razorpayInstance = createRazorpayInstance();
 
@@ -15,31 +15,29 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({ success: false, msg: "Missing required fields" });
     }
 
-    let amount = 249;
+    let amount = 2; // ✅ TEMPORARY: Set to ₹2 for testing
+    const cleanedCoupon = coupon?.trim().toUpperCase();
+    const isCouponApplied = cleanedCoupon === "HUSN40";
 
-    // Apply 40% off if coupon is HUSN40
-    if (coupon && coupon.toUpperCase() === "HUSN40") {
-      amount = Math.floor(amount * 0.6);
+    if (isCouponApplied) {
+      amount = Math.floor(amount * 0.6); // ₹149
     }
 
     const options = {
-      amount: amount * 100, // Razorpay expects amount in paise
+      amount: amount * 100,
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
     };
 
     const order = await razorpayInstance.orders.create(options);
-    return res.status(200).json(order);
+    return res.status(200).json({ ...order, amount }); // Send amount back to frontend
   } catch (err) {
     console.error("❌ Razorpay order creation failed:", err);
-    return res.status(500).json({
-      success: false,
-      msg: "Failed to create Razorpay order",
-    });
+    return res.status(500).json({ success: false, msg: "Failed to create Razorpay order" });
   }
 };
 
-// ✅ Razorpay: Verify Signature & Save to DB
+// ✅ Razorpay: Verify & Save
 exports.verifyPayment = async (req, res) => {
   try {
     const {
@@ -51,118 +49,119 @@ exports.verifyPayment = async (req, res) => {
       order_id,
       payment_id,
       signature,
+      amount,
     } = req.body;
 
     if (!payment_id || !order_id || !signature) {
-      return res.status(400).json({
-        success: false,
-        msg: "Missing payment verification parameters",
-      });
+      return res.status(400).json({ success: false, msg: "Missing payment verification parameters" });
     }
 
-    // Verify Signature
+    // Signature verification
     const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET);
     hmac.update(`${order_id}|${payment_id}`);
     const generatedSignature = hmac.digest("hex");
 
     if (generatedSignature !== signature) {
-      return res.status(400).json({
-        success: false,
-        msg: "Invalid payment signature",
-      });
+      return res.status(400).json({ success: false, msg: "Invalid payment signature" });
     }
 
-    // Save Order to DB
+    const finalAmount = amount || 249;
+    const cleanedCoupon = coupon?.trim().toUpperCase();
+    const isCouponApplied = cleanedCoupon === "HUSN40";
+
+    // Save to DB
     const newOrder = new Order({
-      name,
-      address,
+      name: name.trim(),
+      address: address.trim(),
       mobile_number,
       alternate_number,
-      coupon,
+      coupon: cleanedCoupon || "None",
       orderId: order_id,
       transactionId: payment_id,
       paymentMethod: "Online",
       status: "pending",
+      price: finalAmount, // ✅ store price
     });
 
     await newOrder.save();
 
-    // ✅ Send SMS Notification
-    console.log("📨 Attempting to send SMS to:", mobile_number);
+    // Send SMS
     const smsSid = await sendOrderSMS({
-      to: mobile_number?.startsWith("+") ? mobile_number : `+91${mobile_number}`,
-      name: name?.trim(),
+      to: mobile_number,
+      name: name.trim(),
       orderId: order_id,
-      address: address?.trim(),
+      address: address.trim(),
+      amount: finalAmount,
+      paymentMethod: "Online",
+      couponApplied: isCouponApplied,
     });
 
     smsSid
       ? console.log("✅ SMS sent with SID:", smsSid)
       : console.warn("⚠️ SMS failed to send");
 
-    return res.status(200).json({
-      success: true,
-      msg: "Payment verified and order saved",
-    });
+    return res.status(200).json({ success: true, msg: "Payment verified and order saved" });
   } catch (err) {
     console.error("❌ Razorpay payment verification error:", err);
-    return res.status(500).json({
-      success: false,
-      msg: "Error verifying payment or saving order",
-    });
+    return res.status(500).json({ success: false, msg: "Error verifying payment or saving order" });
   }
 };
 
-// ✅ COD Order Handling
+// ✅ COD Order
 exports.createCODOrder = async (req, res) => {
   try {
     const { name, address, mobile, altNumber, coupon } = req.body;
 
     if (!name || !address || !mobile) {
-      return res.status(400).json({
-        success: false,
-        msg: "Missing required fields for COD",
-      });
+      return res.status(400).json({ success: false, msg: "Missing required fields for COD" });
     }
 
     const orderId = "HH" + Date.now().toString().slice(-6);
 
+    let baseAmount = 249;
+    const cleanedCoupon = coupon?.trim().toUpperCase();
+    const isCouponApplied = cleanedCoupon === "HUSN40";
+
+    if (isCouponApplied) {
+      baseAmount = Math.floor(baseAmount * 0.6); // ₹149
+    }
+
+    const totalAmount = baseAmount + 40; // COD extra fee
+
+    // Save to DB
     const newOrder = new Order({
-      name,
-      address,
+      name: name.trim(),
+      address: address.trim(),
       mobile_number: mobile,
       alternate_number: altNumber,
-      coupon,
+      coupon: cleanedCoupon || "None",
       orderId,
       transactionId: "COD",
       paymentMethod: "COD",
       status: "pending",
+      price: totalAmount, // ✅ store price
     });
 
     await newOrder.save();
 
-    // ✅ Send SMS Notification
-    console.log("📨 Attempting to send SMS to:", mobile);
+    // Send SMS
     const smsSid = await sendOrderSMS({
-      to: mobile?.startsWith("+") ? mobile : `+91${mobile}`,
-      name: name?.trim(),
+      to: mobile,
+      name: name.trim(),
       orderId,
-      address: address?.trim(),
+      address: address.trim(),
+      amount: totalAmount,
+      paymentMethod: "COD",
+      couponApplied: isCouponApplied,
     });
 
     smsSid
       ? console.log("✅ SMS sent with SID:", smsSid)
       : console.warn("⚠️ SMS failed to send");
 
-    return res.status(200).json({
-      success: true,
-      msg: "COD order placed successfully",
-    });
+    return res.status(200).json({ success: true, msg: "COD order placed successfully" });
   } catch (err) {
     console.error("❌ COD Order Error:", err);
-    return res.status(500).json({
-      success: false,
-      msg: "Failed to place COD order",
-    });
+    return res.status(500).json({ success: false, msg: "Failed to place COD order" });
   }
 };

@@ -32,7 +32,18 @@ router.post("/clear-history", isAdminLoggedIn, adminController.clearHistory);
 // ✅ Chart Data API
 router.get("/chart-data", isAdminLoggedIn, adminController.getChartData);
 
-// ✅ Export Orders as CSV
+// ✅ CSV Export (Old)
 router.get("/export/csv", isAdminLoggedIn, adminController.exportCSV);
+
+// ✅ Excel Export (NEW & CLEAN)
+router.get("/export/excel/all", isAdminLoggedIn, (req, res) =>
+  adminController.exportExcel(req, res, "all")
+);
+router.get("/export/excel/delivering", isAdminLoggedIn, (req, res) =>
+  adminController.exportExcel(req, res, "delivering")
+);
+router.get("/export/excel/history", isAdminLoggedIn, (req, res) =>
+  adminController.exportExcel(req, res, "done")
+);
 
 module.exports = router;

@@ -11,33 +11,40 @@ const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
  * @param {string} param0.name - Customer name
  * @param {string} param0.orderId - Order ID
  * @param {string} param0.address - Delivery address
+ * @param {string} param0.paymentMethod - 'Online' or 'COD'
+ * @param {boolean} param0.couponApplied - true if coupon was used
  */
-const sendOrderSMS = async ({ to, name, orderId, address }) => {
+const sendOrderSMS = async ({ to, name, orderId, address, paymentMethod, couponApplied }) => {
   try {
     const formattedTo = to.startsWith("+") ? to : `+91${to}`;
+    
+    // Base price logic
+    const basePrice = 249;
+    const discountedPrice = Math.floor(basePrice * 0.6); // 149
+    const isCOD = paymentMethod === "COD";
 
-    // ✅ Optimized for Twilio Trial (no emoji or excessive length)
-    const messageBody = `Hi ${name}, your Husn Hira order (${orderId}) is confirmed.
-Delivery to: ${address}
-ETA: 3–5 working days.
-Thank you for shopping with us!`;
+    const amount = isCOD
+      ? (couponApplied ? discountedPrice : basePrice) + 40
+      : (couponApplied ? discountedPrice : basePrice);
+
+    const priceLine = isCOD
+      ? `Amount to be paid on delivery: ₹${amount} (COD charges included)`
+      : `Amount Paid: ₹${amount}`;
+
+    const messageBody = `Hi ${name}, your order (${orderId}) with Husn Hira is confirmed.
+${priceLine}
+We'll deliver to: ${address}.
+Expected delivery: 3–5 working days.
+Thanks for choosing Husn Hira 💛`;
 
     const messageOptions = {
       body: messageBody,
       to: formattedTo,
+      from: process.env.TWILIO_PHONE,
     };
 
-    // ✅ Use Messaging Service SID if available
-    if (process.env.MSG_SID) {
-      messageOptions.messagingServiceSid = process.env.MSG_SID;
-    } else if (process.env.TWILIO_PHONE) {
-      messageOptions.from = process.env.TWILIO_PHONE;
-    } else {
-      throw new Error("Missing MSG_SID or TWILIO_PHONE in env");
-    }
-
     const message = await client.messages.create(messageOptions);
-    console.log("✅ SMS sent to", formattedTo, "SID:", message.sid);
+    console.log("✅ SMS sent to", formattedTo, "| SID:", message.sid);
     return message.sid;
   } catch (error) {
     console.error("❌ Failed to send SMS to", to, "| Error:", error.message || error);

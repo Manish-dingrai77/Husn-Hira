@@ -73,9 +73,10 @@
           <h2><i class="fas fa-chart-line"></i> Order Analytics</h2>
           <div class="chart-actions">
             <button class="chart-btn"><i class="fas fa-calendar"></i> Last 7 Days</button>
-            <a href="/admin-portal-1024/export/csv?type=all" class="chart-btn anchor" download>
-  <i class="fas fa-download"></i> Export
+            <a href="/admin-portal-1024/export/excel/all" class="chart-btn anchor" download>
+  <i class="fas fa-file-excel"></i> Export Excel
 </a>
+
 
           </div>
         </div>
@@ -86,10 +87,11 @@
     <% } %>
 
     <div class="export-buttons">
-      <a href="/admin-portal-1024/export/csv?type=all" class="export-btn"><i class="fas fa-file-csv"></i> Export All Orders</a>
-      <a href="/admin-portal-1024/export/csv?type=delivered" class="export-btn"><i class="fas fa-truck"></i> Export Delivered</a>
-      <a href="/admin-portal-1024/export/csv?type=done" class="export-btn"><i class="fas fa-check-circle"></i> Export Completed</a>
-    </div>
+  <a href="/admin-portal-1024/export/excel/all" class="export-btn"><i class="fas fa-file-excel"></i> Export All Orders</a>
+  <a href="/admin-portal-1024/export/excel/delivering" class="export-btn"><i class="fas fa-truck"></i> Export Delivering</a>
+  <a href="/admin-portal-1024/export/excel/history" class="export-btn"><i class="fas fa-check-circle"></i> Export Completed</a>
+</div>
+
 
     <form method="GET" action="" class="search-form">
       <input type="text" name="search" placeholder="Search by name, mobile, or order ID" value="<%= search || '' %>" />
@@ -185,6 +187,16 @@
           <div class="info-value"><%= order.transactionId || '—' %></div>
         </div>
       </div>
+
+      <!-- Price -->
+<div class="info">
+  <i class="fas fa-rupee-sign"></i>
+  <div class="info-content">
+    <div class="info-label">Price</div>
+    <div class="info-value">₹<%= order.price || '—' %></div>
+  </div>
+</div>
+
 
       <!-- Coupon -->
       <div class="info">

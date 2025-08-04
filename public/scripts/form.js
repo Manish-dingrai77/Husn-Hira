@@ -8,6 +8,23 @@ function adjustFormHeight() {
 adjustFormHeight();
 window.addEventListener('resize', adjustFormHeight);
 
+// ✅ Show/hide COD delivery charge note
+document.addEventListener("DOMContentLoaded", () => {
+  const codNote = document.getElementById("cod-note");
+  const paymentRadios = document.querySelectorAll('input[name="paymentMethod"]');
+
+  paymentRadios.forEach((radio) => {
+    radio.addEventListener("change", () => {
+      if (radio.value === "COD" && radio.checked) {
+        codNote.classList.remove("hidden");
+      } else {
+        codNote.classList.add("hidden");
+      }
+    });
+  });
+});
+
+
 // ✅ Handle Buy Now Button Click
 document.getElementById("buyBtn")?.addEventListener("click", async function (e) {
   e.preventDefault();
@@ -90,7 +107,7 @@ document.getElementById("buyBtn")?.addEventListener("click", async function (e) 
     }
 
     const options = {
-      key: "rzp_test_ktweM0GM157h7A", // 🔁 Replace with production key
+      key: razorpayKey, // ✅ now dynamic from EJS
       amount: order.amount,
       currency: "INR",
       name: "Husn Hira",

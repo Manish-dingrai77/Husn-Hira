@@ -21,6 +21,8 @@ const envSchema = Joi.object({
   SESSION_SECRET: Joi.string().min(10).required(),
   NODE_ENV: Joi.string().valid("development", "production").default("development"),
   PORT: Joi.number().default(8080),
+  RAZORPAY_KEY_ID: Joi.string().required(), // ✅ Razorpay Key validation
+  RAZORPAY_KEY_SECRET: Joi.string().required()
 }).unknown();
 
 const { error, value: envVars } = envSchema.validate(process.env);
@@ -51,7 +53,7 @@ app.use(helmet({
 
 // ✅ Step 5: Admin Login Rate Limit
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 10,
   message: "⚠ Too many login attempts. Please try again later.",
   standardHeaders: true,
@@ -69,19 +71,19 @@ app.use(session({
   store: MongoStore.create({
     mongoUrl: envVars.MONGO_URI,
     collectionName: "adminSessions",
-    ttl: 7 * 24 * 60 * 60 // 7 days
+    ttl: 7 * 24 * 60 * 60
   }),
   cookie: {
     httpOnly: true,
     secure: envVars.NODE_ENV === "production",
-    sameSite: "lax", // Razorpay netbanking fix
+    sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000
   }
 }));
 
 // ✅ Step 7: Request Parsing and CORS
 app.use(cors({
-  origin: '*', // ✅ Optional: Replace with domain in production
+  origin: '*',
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type'],
   credentials: true
@@ -102,10 +104,12 @@ const adminRoutes = require("./routes/admin.routes");
 app.use("/api", paymentRoutes);
 app.use("/admin-portal-1024", adminRoutes);
 
-// ✅ Step 10: Static Frontend Pages
+// ✅ Step 10: Static Frontend Pages with Razorpay Key
 app.get("/", (req, res) => res.render("home"));
 app.get("/product", (req, res) => res.render("product"));
-app.get("/form", (req, res) => res.render("form"));
+app.get("/form", (req, res) => res.render("form", {
+  razorpayKey: envVars.RAZORPAY_KEY_ID // ✅ Inject into EJS template
+}));
 app.get("/about", (req, res) => res.render("about"));
 app.get("/reviews", (req, res) => res.render("reviews"));
 app.get("/T&C", (req, res) => res.render("T&C"));
