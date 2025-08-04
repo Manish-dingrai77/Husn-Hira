@@ -1,31 +1,46 @@
-// utils/sendSMS.js
+require("dotenv").config();
 const twilio = require("twilio");
 
-// 🧪 Dummy values (replace later with real credentials)
-const accountSid = 'ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'; // Your Account SID
-const authToken = 'your_auth_token'; // Your Auth Token
-const fromPhone = '+1234567890'; // Your Twilio phone number (US/UK)
+// Initialize Twilio client
+const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
-const client = twilio(accountSid, authToken);
-
-const sendOrderSMS = async ({ to, name, orderId, txnId, address }) => {
+/**
+ * Send order confirmation SMS via Twilio
+ * @param {Object} param0
+ * @param {string} param0.to - Recipient number (with or without +91)
+ * @param {string} param0.name - Customer name
+ * @param {string} param0.orderId - Order ID
+ * @param {string} param0.address - Delivery address
+ */
+const sendOrderSMS = async ({ to, name, orderId, address }) => {
   try {
-    const messageBody = `Hi ${name}, your order has been placed successfully! 
-Order ID: ${orderId}
-Transaction ID: ${txnId}
-Address: ${address}
-Thank you for shopping with Husn Hira!`;
+    const formattedTo = to.startsWith("+") ? to : `+91${to}`;
 
-    const message = await client.messages.create({
+    // ✅ Optimized for Twilio Trial (no emoji or excessive length)
+    const messageBody = `Hi ${name}, your Husn Hira order (${orderId}) is confirmed.
+Delivery to: ${address}
+ETA: 3–5 working days.
+Thank you for shopping with us!`;
+
+    const messageOptions = {
       body: messageBody,
-      from: fromPhone,
-      to: to, // Recipient number (must be verified in trial)
-    });
+      to: formattedTo,
+    };
 
-    console.log("✅ SMS sent:", message.sid);
+    // ✅ Use Messaging Service SID if available
+    if (process.env.MSG_SID) {
+      messageOptions.messagingServiceSid = process.env.MSG_SID;
+    } else if (process.env.TWILIO_PHONE) {
+      messageOptions.from = process.env.TWILIO_PHONE;
+    } else {
+      throw new Error("Missing MSG_SID or TWILIO_PHONE in env");
+    }
+
+    const message = await client.messages.create(messageOptions);
+    console.log("✅ SMS sent to", formattedTo, "SID:", message.sid);
     return message.sid;
   } catch (error) {
-    console.error("❌ Failed to send SMS:", error.message);
+    console.error("❌ Failed to send SMS to", to, "| Error:", error.message || error);
     return null;
   }
 };

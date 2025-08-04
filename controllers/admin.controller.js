@@ -10,6 +10,7 @@ const razorpayInstance = createRazorpayInstance();
 const ADMIN_USER = process.env.ADMIN_USER;
 const ADMIN_PASS = process.env.ADMIN_PASS;
 
+// ✅ Middleware: Admin auth check
 exports.isAuthenticated = (req, res, next) => {
   if (req.session && req.session.adminLoggedIn) {
     console.log("✅ Authenticated as admin");
@@ -19,9 +20,35 @@ exports.isAuthenticated = (req, res, next) => {
   return res.redirect("/admin-portal-1024/login-secret");
 };
 
-
+// ✅ Escape input for RegExp
 const escapeRegex = (str) => str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
+// ✅ Reusable: Build search + date query
+const buildSearchQuery = (status, search, date) => {
+  const query = { status };
+
+  if (search) {
+    const regex = new RegExp(escapeRegex(search), "i");
+    query.$or = [
+      { name: regex },
+      { mobile_number: regex },
+      { orderId: regex },
+      { transactionId: regex }
+    ];
+  }
+
+  if (date) {
+    const start = new Date(date);
+    const end = new Date(date);
+    end.setDate(end.getDate() + 1);
+    query.date = { $gte: start, $lt: end };
+  }
+
+  return query;
+};
+
+
+// ✅ Create Razorpay order
 exports.createOrder = async (req, res) => {
   const { name, address, mobile_number, alternate_number, coupon } = req.body;
   try {
@@ -48,6 +75,7 @@ exports.createOrder = async (req, res) => {
   }
 };
 
+// ✅ Verify Razorpay payment and save order
 exports.verifyPayment = async (req, res) => {
   const { name, address, mobile_number, alternate_number, coupon, order_id, payment_id, signature } = req.body;
   try {
@@ -79,28 +107,29 @@ exports.verifyPayment = async (req, res) => {
   }
 };
 
+// ✅ Admin Login Pages
 exports.getLoginPage = (req, res) => {
   res.render("login", { error: null });
 };
 
 exports.login = (req, res) => {
   const { username, password } = req.body;
-
   if (username === ADMIN_USER && password === ADMIN_PASS) {
-    req.session.isAdmin = true; // ✅ Session flag for middleware
-    return res.redirect("/admin-portal-1024/dashboard");
+    req.session.isAdmin = true;
+    return res.redirect("/admin-portal-1024/dashboard"); // ✅ correct route
   }
-
-  // ❌ Invalid login
   res.render("login", { error: "Invalid credentials" });
 };
+
+
 
 exports.logout = (req, res) => {
   req.session.destroy(() => {
     res.redirect("/admin-portal-1024/login-secret");
   });
 };
-// 🔄 Chart Aggregation Helper
+
+// ✅ Chart Aggregation
 async function getChartAggregation(status) {
   const aggregation = await Order.aggregate([
     { $match: { status } },
@@ -125,31 +154,13 @@ async function getChartAggregation(status) {
   };
 }
 
-// ✅ Pending Tab
+// ✅ Dashboard Tabs
 exports.getDashboard = async (req, res) => {
   try {
     const { search, date } = req.query;
-    const query = { status: "pending" };
-
-    if (search) {
-      const regex = new RegExp(escapeRegex(search), "i");
-      query.$or = [
-        { name: regex },
-        { mobile_number: regex },
-        { order_id: regex },
-        { payment_id: regex }
-      ];
-    }
-
-    if (date) {
-      const start = new Date(date);
-      const end = new Date(date); end.setDate(end.getDate() + 1);
-      query.date = { $gte: start, $lt: end };
-    }
-
+    const query = buildSearchQuery("pending", search, date);
     const orders = await Order.find(query).sort({ date: -1 });
     const chartData = await getChartAggregation("pending");
-
     res.render("dashboard", { orders, currentTab: "pending", search, selectedDate: date, chartData });
   } catch (err) {
     console.error("❌ Failed to fetch pending orders:", err);
@@ -157,30 +168,12 @@ exports.getDashboard = async (req, res) => {
   }
 };
 
-// ✅ Delivering Tab
 exports.getDeliveringOrders = async (req, res) => {
   try {
     const { search, date } = req.query;
-    const query = { status: "delivering" };
-
-    if (search) {
-      const regex = new RegExp(escapeRegex(search), "i");
-      query.$or = [
-        { name: regex },
-        { mobile_number: regex },
-        { order_id: regex }
-      ];
-    }
-
-    if (date) {
-      const start = new Date(date);
-      const end = new Date(date); end.setDate(end.getDate() + 1);
-      query.date = { $gte: start, $lt: end };
-    }
-
+    const query = buildSearchQuery("delivering", search, date);
     const orders = await Order.find(query).sort({ date: -1 });
     const chartData = await getChartAggregation("delivering");
-
     res.render("dashboard", { orders, currentTab: "delivering", search, selectedDate: date, chartData });
   } catch (err) {
     console.error("❌ Failed to fetch delivering orders:", err);
@@ -188,47 +181,30 @@ exports.getDeliveringOrders = async (req, res) => {
   }
 };
 
-// ✅ Done Tab
 exports.getDoneOrders = async (req, res) => {
   try {
     const { search, date } = req.query;
-    const query = { status: "done" };
-
-    if (search) {
-      const regex = new RegExp(escapeRegex(search), "i");
-      query.$or = [
-        { name: regex },
-        { mobile_number: regex },
-        { order_id: regex }
-      ];
-    }
-
-    if (date) {
-      const start = new Date(date);
-      const end = new Date(date); end.setDate(end.getDate() + 1);
-      query.date = { $gte: start, $lt: end };
-    }
-
+    const query = buildSearchQuery("done", search, date);
     const orders = await Order.find(query).sort({ date: -1 });
     const chartData = await getChartAggregation("done");
-
     res.render("dashboard", { orders, currentTab: "done", search, selectedDate: date, chartData });
   } catch (err) {
-    console.error("❌ Failed to fetch history orders:", err);
+    console.error("❌ Failed to fetch done orders:", err);
     res.status(500).send("Failed to fetch completed orders");
   }
 };
 
+// ✅ Order Status Actions
 exports.cancelOrder = async (req, res) => {
   try {
     const orderId = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(orderId)) return res.status(400).send("Invalid order ID");
+
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).send("Order not found");
 
-    const redirectPath = getRedirectPath(order.status);
     await Order.findByIdAndDelete(orderId);
-    res.redirect(redirectPath);
+    res.redirect(getRedirectPath(order.status));
   } catch (err) {
     console.error("❌ Failed to cancel order:", err);
     res.status(500).send("Failed to cancel order");
@@ -284,6 +260,7 @@ exports.clearHistory = async (req, res) => {
   }
 };
 
+// ✅ Helper: Redirect path by order status
 function getRedirectPath(status) {
   switch (status) {
     case "delivering": return "/admin-portal-1024/delivering";
@@ -292,7 +269,7 @@ function getRedirectPath(status) {
   }
 }
 
-// ✅ Optional Chart API for external frontend requests
+// ✅ API: External chart data
 exports.getChartData = async (req, res) => {
   try {
     const allOrders = await Order.find().sort({ date: 1 });
@@ -316,7 +293,7 @@ exports.getChartData = async (req, res) => {
   }
 };
 
-
+// ✅ CSV Export
 exports.exportCSV = async (req, res) => {
   try {
     const { type } = req.query;
@@ -326,28 +303,17 @@ exports.exportCSV = async (req, res) => {
       filter.status = "delivering";
     } else if (type === "done") {
       filter.status = "done";
-    } // else, get all orders
-
-    const orders = await Order.find(filter).lean();
-
-    if (!orders.length) {
-      return res.status(404).send("No orders found to export");
     }
 
+    const orders = await Order.find(filter).lean();
+    if (!orders.length) return res.status(404).send("No orders found to export");
+
     const fields = [
-      "name",
-      "address",
-      "mobile_number",
-      "alternate_number",
-      "coupon",
-      "order_id",
-      "payment_id",
-      "status",
-      "date"
+      "name", "address", "mobile_number", "alternate_number",
+      "coupon", "order_id", "payment_id", "status", "date"
     ];
 
-    const opts = { fields };
-    const parser = new Parser(opts);
+    const parser = new Parser({ fields });
     const csv = parser.parse(orders);
 
     res.header("Content-Type", "text/csv");

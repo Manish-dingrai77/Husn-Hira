@@ -627,3 +627,67 @@ footer {
 }
 
 
+.payment-section {
+  display: flex;
+  gap: 2rem;
+  margin: 1.5rem 0;
+  justify-content: center;
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1.2rem;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s ease;
+  font-size: 1rem;
+  user-select: none;
+  position: relative;
+}
+
+.payment-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.payment-option:hover {
+  border-color: #ff6b8b;
+  background: #fff0f3;
+}
+
+.payment-option i {
+  color: #ff6b8b;
+  font-size: 1.2rem;
+}
+
+.payment-option span {
+  font-weight: 500;
+}
+
+.payment-option input[type="radio"]:checked + i + span {
+  font-weight: 600;
+  color: #ff6b8b;
+}
+
+/* Button Styling */
+.buy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #ff6b8b;
+  color: white;
+  border: none;
+  padding: 0.9rem 2rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.buy-btn:hover {
+  background: #e85d7a;
+}
