@@ -51,6 +51,8 @@ app.use(helmet({
   crossOriginResourcePolicy: false // ✅ Important for Razorpay
 }));
 
+app.set('trust proxy', 1); 
+
 // ✅ Step 5: Admin Login Rate Limit
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
