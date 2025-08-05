@@ -24,10 +24,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-
 // ✅ Handle Buy Now Button Click
 document.getElementById("buyBtn")?.addEventListener("click", async function (e) {
   e.preventDefault();
+  const buyBtn = document.getElementById("buyBtn");
+
   // ✅ Get form values
   const name = document.getElementById("name")?.value.trim();
   const address = document.getElementById("address")?.value.trim();
@@ -54,8 +55,33 @@ document.getElementById("buyBtn")?.addEventListener("click", async function (e) 
     return Swal.fire('Terms Not Accepted', 'Please accept Terms & Conditions to continue.', 'warning');
   }
 
-  // ✅ COD Flow
+  // ✅ COD Flow with Confirmation
   if (paymentMethod === "COD") {
+    const confirmed = await Swal.fire({
+      title: "Confirm Your COD Order",
+      text: "Cash on Delivery orders include ₹40 delivery charge. Do you want to continue?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Place Order",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#2e7d32",
+      cancelButtonColor: "#d33"
+    });
+
+    if (!confirmed.isConfirmed) return;
+
+    buyBtn.disabled = true;
+
+    Swal.fire({
+      title: 'Placing Order...',
+      text: 'Please wait',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
     try {
       const res = await fetch("/api/cod-order", {
         method: "POST",
@@ -70,6 +96,9 @@ document.getElementById("buyBtn")?.addEventListener("click", async function (e) 
       });
 
       const data = await res.json();
+      Swal.close();
+      buyBtn.disabled = false;
+
       if (data.success) {
         Swal.fire({
           icon: 'success',
@@ -81,12 +110,17 @@ document.getElementById("buyBtn")?.addEventListener("click", async function (e) 
         Swal.fire('Failed', data.message || 'Failed to place COD order.', 'error');
       }
     } catch (err) {
+      Swal.close();
+      buyBtn.disabled = false;
       Swal.fire('Error', 'Something went wrong while placing the order.', 'error');
     }
+
     return;
   }
 
   // ✅ Online Payment Flow
+  buyBtn.disabled = true;
+
   try {
     const res = await fetch("/api/createOrder", {
       method: "POST",
@@ -101,13 +135,14 @@ document.getElementById("buyBtn")?.addEventListener("click", async function (e) 
     });
 
     const order = await res.json();
+    buyBtn.disabled = false;
 
     if (!order?.id) {
       return Swal.fire('Order Failed', 'Could not initiate Razorpay order.', 'error');
     }
 
     const options = {
-      key: razorpayKey, // ✅ now dynamic from EJS
+      key: razorpayKey,
       amount: order.amount,
       currency: "INR",
       name: "Husn Hira",
@@ -115,8 +150,6 @@ document.getElementById("buyBtn")?.addEventListener("click", async function (e) 
       image: "/Assets/logo.png",
       order_id: order.id,
       handler: async function (response) {
-        console.log("🧾 Razorpay Payment Response:", response);
-
         try {
           const verifyRes = await fetch("/api/verifyPayment", {
             method: "POST",
@@ -149,16 +182,14 @@ document.getElementById("buyBtn")?.addEventListener("click", async function (e) 
           Swal.fire('Verification Error', 'Could not verify payment.', 'error');
         }
       },
-
-       method: {
-    card: true,
-    upi: true,
-    netbanking: true,
-    wallet: false,
-    emi: false,
-    paylater: false,
-  },
-
+      method: {
+        card: true,
+        upi: true,
+        netbanking: true,
+        wallet: false,
+        emi: false,
+        paylater: false,
+      },
       prefill: {
         name: name,
         contact: mobile,
@@ -168,6 +199,7 @@ document.getElementById("buyBtn")?.addEventListener("click", async function (e) 
       },
       modal: {
         ondismiss: function () {
+          buyBtn.disabled = false;
           Swal.fire('Payment Cancelled', 'You closed the payment popup.', 'info');
         },
       },
@@ -175,30 +207,29 @@ document.getElementById("buyBtn")?.addEventListener("click", async function (e) 
 
     const rzp = new Razorpay(options);
     rzp.on("payment.failed", function (response) {
+      buyBtn.disabled = false;
       console.error("❌ Payment Failed:", response);
       Swal.fire('Payment Failed', response.error.description || 'Try again.', 'error');
     });
 
     rzp.open();
   } catch (err) {
+    buyBtn.disabled = false;
     console.error("❌ Razorpay Init Error:", err);
     Swal.fire('Error', 'Could not start Razorpay payment.', 'error');
   }
 });
 
+// ✅ Clean URL on reload
 const navEntries = performance.getEntriesByType("navigation");
 if (navEntries.length > 0 && navEntries[0].type === "reload") {
-  // If this is a page reload
   const cleanUrl = window.location.pathname;
-  window.location.replace(cleanUrl); // removes query params like ?search=...
+  window.location.replace(cleanUrl);
 }
 
+// ✅ Admin panel refresh button (if any)
 document.getElementById("refresh-btn")?.addEventListener("click", () => {
-  // Clear input values
   document.getElementById("search").value = "";
   document.getElementById("date").value = "";
-
-  // Reload page without filters
   window.location.href = window.location.pathname;
 });
-
