@@ -69,6 +69,10 @@ exports.verifyPayment = async (req, res) => {
     const cleanedCoupon = coupon?.trim().toUpperCase();
     const isCouponApplied = cleanedCoupon === "HUSN40";
 
+    // ✅ Get current IST time
+    const nowUtc = new Date();
+    const istDate = new Date(nowUtc.getTime() + 5.5 * 60 * 60 * 1000);
+
     // Save to DB
     const newOrder = new Order({
       name: name.trim(),
@@ -80,7 +84,8 @@ exports.verifyPayment = async (req, res) => {
       transactionId: payment_id,
       paymentMethod: "Online",
       status: "pending",
-      price: finalAmount, // ✅ store price
+      price: finalAmount,
+      orderedOn: istDate, // ✅ Save correct IST time
     });
 
     await newOrder.save();
@@ -128,6 +133,10 @@ exports.createCODOrder = async (req, res) => {
 
     const totalAmount = baseAmount + 40; // COD extra fee
 
+    // ✅ Get current IST time
+    const nowUtc = new Date();
+    const istDate = new Date(nowUtc.getTime() + 5.5 * 60 * 60 * 1000);
+
     // Save to DB
     const newOrder = new Order({
       name: name.trim(),
@@ -139,7 +148,8 @@ exports.createCODOrder = async (req, res) => {
       transactionId: "COD",
       paymentMethod: "COD",
       status: "pending",
-      price: totalAmount, // ✅ store price
+      price: totalAmount,
+      orderedOn: istDate, // ✅ Save correct IST time
     });
 
     await newOrder.save();
