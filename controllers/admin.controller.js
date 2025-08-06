@@ -368,7 +368,7 @@ exports.exportExcel = async (req, res, statusType) => {
         payment_id: order.payment_id || "N/A",
         coupon: order.coupon || "Not Applied",
         status: order.status,
-        date: new Date(order.date).toLocaleString("en-IN")
+        date: new Date(order.date).toLocaleDateString("en-IN")
       });
     });
 
