@@ -15,7 +15,7 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({ success: false, msg: "Missing required fields" });
     }
 
-    let amount = 2; // ✅ TEMPORARY: Set to ₹2 for testing
+    let amount = 249; // ✅
     const cleanedCoupon = coupon?.trim().toUpperCase();
     const isCouponApplied = cleanedCoupon === "HUSN40";
 
