@@ -35,6 +35,7 @@ const sendOrderSMS = async ({ to, name, orderId, address, paymentMethod, couponA
 ${priceLine}
 We'll deliver to: ${address}.
 Expected delivery: 3–5 working days.
+To cancel your order, kindly contact us on WhatsApp.
 Thanks for choosing Husn Hira 💛`;
 
     const messageOptions = {
