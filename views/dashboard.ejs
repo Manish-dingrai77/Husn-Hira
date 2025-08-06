@@ -1,459 +1,555 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Dashboard - Husn Hira</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="/styles/dashboard.css">
-</head>
-<body>
-  <header>
-    <div class="brand">
-      <img src="/Assets/logo.png" alt="Husn Hira Logo">
-      <h1>Husn Hira Admin</h1>
-    </div>
-    <button class="menu-toggle" id="menuToggle">
-      <i class="fas fa-bars"></i>
-    </button>
-    <nav>
-      <a href="/admin-portal-1024/dashboard" class="<%= currentTab === 'pending' ? 'active' : '' %>"><i class="fas fa-box"></i> New Orders</a>
-      <a href="/admin-portal-1024/delivering" class="<%= currentTab === 'delivering' ? 'active' : '' %>"><i class="fas fa-truck"></i> Delivering</a>
-      <a href="/admin-portal-1024/history" class="<%= currentTab === 'done' ? 'active' : '' %>"><i class="fas fa-clock"></i> History</a>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Husn Hira</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/styles/dashboard.css" />
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <img src="/Assets/logo.png" alt="Husn Hira Logo" />
+        <h1>Husn Hira Admin</h1>
+      </div>
+      <button class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+      </button>
+      <nav>
+        <a
+          href="/admin-portal-1024/dashboard"
+          class="<%= currentTab === 'pending' ? 'active' : '' %>"
+          ><i class="fas fa-box"></i> New Orders</a
+        >
+        <a
+          href="/admin-portal-1024/delivering"
+          class="<%= currentTab === 'delivering' ? 'active' : '' %>"
+          ><i class="fas fa-truck"></i> Delivering</a
+        >
+        <a
+          href="/admin-portal-1024/history"
+          class="<%= currentTab === 'done' ? 'active' : '' %>"
+          ><i class="fas fa-clock"></i> History</a
+        >
+        <form action="/admin-portal-1024/logout" method="GET">
+          <button type="submit" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </form>
+      </nav>
+    </header>
+
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <div class="mobile-nav">
+      <button class="close-btn" id="closeMenu">
+        <i class="fas fa-times"></i>
+      </button>
+      <a
+        href="/admin-portal-1024/dashboard"
+        class="<%= currentTab === 'pending' ? 'active' : '' %>"
+        ><i class="fas fa-box"></i> New Orders</a
+      >
+      <a
+        href="/admin-portal-1024/delivering"
+        class="<%= currentTab === 'delivering' ? 'active' : '' %>"
+        ><i class="fas fa-truck"></i> Delivering</a
+      >
+      <a
+        href="/admin-portal-1024/history"
+        class="<%= currentTab === 'done' ? 'active' : '' %>"
+        ><i class="fas fa-clock"></i> History</a
+      >
       <form action="/admin-portal-1024/logout" method="GET">
-        <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        <button type="submit" class="logout-btn">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
       </form>
-    </nav>
-  </header>
+    </div>
 
-  <div class="mobile-overlay" id="mobileOverlay"></div>
-
-  <div class="mobile-nav">
-    <button class="close-btn" id="closeMenu"><i class="fas fa-times"></i></button>
-    <a href="/admin-portal-1024/dashboard" class="<%= currentTab === 'pending' ? 'active' : '' %>"><i class="fas fa-box"></i> New Orders</a>
-    <a href="/admin-portal-1024/delivering" class="<%= currentTab === 'delivering' ? 'active' : '' %>"><i class="fas fa-truck"></i> Delivering</a>
-    <a href="/admin-portal-1024/history" class="<%= currentTab === 'done' ? 'active' : '' %>"><i class="fas fa-clock"></i> History</a>
-    <form action="/admin-portal-1024/logout" method="GET">
-      <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
-    </form>
-  </div>
-
-  <div class="container">
-    <!-- Dashboard Summary -->
-    <div class="dashboard-summary">
-      <% if (currentTab === 'pending') { %>
+    <div class="container">
+      <!-- Dashboard Summary -->
+      <div class="dashboard-summary">
+        <% if (currentTab === 'pending') { %>
         <div class="summary-card pending">
           <h2><i class="fas fa-box"></i> Total Orders</h2>
           <div class="count"><%= orders.length %></div>
         </div>
-      <% } else if (currentTab === 'delivering') { %>
+        <% } else if (currentTab === 'delivering') { %>
         <div class="summary-card delivering">
           <h2><i class="fas fa-truck"></i> Delivering</h2>
           <div class="count"><%= orders.length %></div>
         </div>
-      <% } else if (currentTab === 'done') { %>
+        <% } else if (currentTab === 'done') { %>
         <div class="summary-card done">
           <h2><i class="fas fa-check-circle"></i> Completed</h2>
           <div class="count"><%= orders.length %></div>
         </div>
-      <% } %>
-    </div>
-
-    <% if (chartData) { %>
-      <div id="chart-data"
-           data-labels='<%- JSON.stringify(chartData.labels || []) %>'
-           data-orders='<%- JSON.stringify(chartData.orders || []) %>'
-           data-revenue='<%- JSON.stringify(chartData.revenue || []) %>'>
+        <% } %>
       </div>
+
+      <% if (chartData) { %>
+      <div
+        id="chart-data"
+        data-labels="<%- JSON.stringify(chartData.labels || []) %>"
+        data-orders="<%- JSON.stringify(chartData.orders || []) %>"
+        data-revenue="<%- JSON.stringify(chartData.revenue || []) %>"
+      ></div>
       <div class="chart-container">
         <div class="chart-header">
           <h2><i class="fas fa-chart-line"></i> Order Analytics</h2>
           <div class="chart-actions">
-            <button class="chart-btn"><i class="fas fa-calendar"></i> Last 7 Days</button>
-            <a href="/admin-portal-1024/export/excel/all" class="chart-btn anchor" download>
-  <i class="fas fa-file-excel"></i> Export Excel
-</a>
-
-
+            <button class="chart-btn">
+              <i class="fas fa-calendar"></i> Last 7 Days
+            </button>
+            <a
+              href="/admin-portal-1024/export/excel/all"
+              class="chart-btn anchor"
+              download
+            >
+              <i class="fas fa-file-excel"></i> Export Excel
+            </a>
           </div>
         </div>
         <div class="chart-wrapper">
           <canvas id="orderChart"></canvas>
         </div>
       </div>
-    <% } %>
+      <% } %>
 
-    <div class="export-buttons">
-  <a href="/admin-portal-1024/export/excel/all" class="export-btn"><i class="fas fa-file-excel"></i> Export All Orders</a>
-  <a href="/admin-portal-1024/export/excel/delivering" class="export-btn"><i class="fas fa-truck"></i> Export Delivering</a>
-  <a href="/admin-portal-1024/export/excel/history" class="export-btn"><i class="fas fa-check-circle"></i> Export Completed</a>
-</div>
+      <div class="export-buttons">
+        <a href="/admin-portal-1024/export/excel/all" class="export-btn"
+          ><i class="fas fa-file-excel"></i> Export All Orders</a
+        >
+        <a href="/admin-portal-1024/export/excel/delivering" class="export-btn"
+          ><i class="fas fa-truck"></i> Export Delivering</a
+        >
+        <a href="/admin-portal-1024/export/excel/history" class="export-btn"
+          ><i class="fas fa-check-circle"></i> Export Completed</a
+        >
+      </div>
 
+      <form method="GET" action="" class="search-form">
+        <input
+          type="text"
+          name="search"
+          placeholder="Search by name, mobile, or order ID"
+          value="<%= search || '' %>"
+        />
+        <input type="date" name="date" value="<%= selectedDate || '' %>" />
+        <button type="submit">
+          <i class="fas fa-search"></i> Search/Filter
+        </button>
+      </form>
 
-    <form method="GET" action="" class="search-form">
-      <input type="text" name="search" placeholder="Search by name, mobile, or order ID" value="<%= search || '' %>" />
-      <input type="date" name="date" value="<%= selectedDate || '' %>" />
-      <button type="submit"><i class="fas fa-search"></i> Search/Filter</button>
-    </form>
-
-    <% if (currentTab === 'done') { %>
+      <% if (currentTab === 'done') { %>
       <div class="orders-header">
         <h2><i class="fas fa-list"></i> Order History</h2>
-        <form method="POST" action="/admin-portal-1024/clear-history" id="clearHistoryForm">
-          <button type="submit" class="clear-history-btn"><i class="fas fa-trash-alt"></i> Clear History</button>
+        <form
+          method="POST"
+          action="/admin-portal-1024/clear-history"
+          id="clearHistoryForm"
+        >
+          <button type="submit" class="clear-history-btn">
+            <i class="fas fa-trash-alt"></i> Clear History
+          </button>
         </form>
       </div>
-    <% } else { %>
+      <% } else { %>
       <div class="orders-header">
         <h2><i class="fas fa-list"></i> Current Orders</h2>
       </div>
-    <% } %>
-
-    <% if (orders.length === 0) { %>
+      <% } %> <% if (orders.length === 0) { %>
       <div class="no-orders">
         <i class="fas fa-inbox"></i>
         <h3>No Orders Found</h3>
         <p>There are currently no orders matching your criteria.</p>
       </div>
-    <% } else { %>
-     <div class="orders-grid">
-  <% orders.forEach(order => { %>
-    <div class="card <%= 
-      currentTab === 'pending' ? 'pending' : 
-      currentTab === 'delivering' ? 'delivering' : 
-      'done' 
-    %>">
-      
-      <div class="card-header">
-        <h3><%= order.name %></h3>
-        <div class="order-id"><%= order.orderId || '—' %></div>
-      </div>
-
-      <!-- Address -->
-      <div class="info">
-        <i class="fas fa-map-marker-alt"></i>
-        <div class="info-content">
-          <div class="info-label">Address</div>
-          <div class="info-value"><%= order.address %></div>
-        </div>
-      </div>
-
-      <!-- Mobile -->
-      <div class="info">
-        <i class="fas fa-phone"></i>
-        <div class="info-content">
-          <div class="info-label">Mobile</div>
-          <div class="info-value"><%= order.mobile_number %></div>
-        </div>
-      </div>
-
-      <!-- Alternate Number -->
-      <% if (order.alternate_number) { %>
-        <div class="info">
-          <i class="fas fa-phone-alt"></i>
-          <div class="info-content">
-            <div class="info-label">Alt Number</div>
-            <div class="info-value"><%= order.alternate_number %></div>
+      <% } else { %>
+      <div class="orders-grid">
+        <% orders.forEach(order => { %>
+        <div
+          class="card <%= currentTab === 'pending' ? 'pending' : currentTab === 'delivering' ? 'delivering' : 'done' %>"
+        >
+          <div class="card-header">
+            <h3><%= order.name %></h3>
+            <div class="order-id"><%= order.orderId || '—' %></div>
           </div>
-        </div>
-      <% } %>
 
-      <!-- Payment Method -->
-      <div class="info">
-        <i class="fas fa-money-bill-wave"></i>
-        <div class="info-content">
-          <div class="info-label">Payment</div>
-          <div class="info-value"><%= order.paymentMethod || '—' %></div>
-        </div>
-      </div>
-
-      <!-- Order ID -->
-      <div class="info">
-        <i class="fas fa-receipt"></i>
-        <div class="info-content">
-          <div class="info-label">Order ID</div>
-          <div class="info-value"><%= order.orderId || '—' %></div>
-        </div>
-      </div>
-
-      <!-- Transaction ID -->
-      <div class="info">
-        <i class="fas fa-file-invoice-dollar"></i>
-        <div class="info-content">
-          <div class="info-label">Txn ID</div>
-          <div class="info-value"><%= order.transactionId || '—' %></div>
-        </div>
-      </div>
-
-      <!-- Price -->
-<div class="info">
-  <i class="fas fa-rupee-sign"></i>
-  <div class="info-content">
-    <div class="info-label">Price</div>
-    <div class="info-value">₹<%= order.price || '—' %></div>
-  </div>
-</div>
-
-
-      <!-- Coupon -->
-      <div class="info">
-        <i class="fas fa-tag"></i>
-        <div class="info-content">
-          <div class="info-label">Coupon</div>
-          <div class="info-value"><%= order.coupon || 'None' %></div>
-        </div>
-      </div>
-
-      <!-- Order Date -->
-      <div class="info">
-        <i class="fas fa-calendar-alt"></i>
-        <div class="info-content">
-          <div class="info-label">Ordered On</div>
-          <div class="info-value">
-            <%= order.date ? order.date.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—' %>
-          </div>
-        </div>
-      </div>
-            
-            <div class="btns">
-              <% if (currentTab === 'pending') { %>
-                <form method="POST" action="/admin-portal-1024/cancel/<%= order._id %>" class="action-form" data-type="cancel">
-                  <button type="submit" class="btn cancel"><i class="fas fa-times"></i> Cancel</button>
-                </form>
-                <form method="POST" action="/admin-portal-1024/deliver/<%= order._id %>" class="action-form" data-type="deliver">
-                  <button type="submit" class="btn deliver"><i class="fas fa-truck"></i> Deliver</button>
-                </form>
-              <% } else if (currentTab === 'delivering') { %>
-                <form method="POST" action="/admin-portal-1024/cancel/<%= order._id %>" class="action-form" data-type="cancel">
-                  <button type="submit" class="btn cancel"><i class="fas fa-times"></i> Cancel</button>
-                </form>
-                <form method="POST" action="/admin-portal-1024/done/<%= order._id %>" class="action-form" data-type="complete">
-                  <button type="submit" class="btn deliver"><i class="fas fa-check-circle"></i> Complete</button>
-                </form>
-              <% } else if (currentTab === 'done') { %>
-                <form method="POST" action="/admin-portal-1024/delete/<%= order._id %>" class="action-form" data-type="delete">
-                  <button type="submit" class="btn cancel"><i class="fas fa-trash-alt"></i> Delete</button>
-                </form>
-              <% } %>
+          <!-- Address -->
+          <div class="info">
+            <i class="fas fa-map-marker-alt"></i>
+            <div class="info-content">
+              <div class="info-label">Address</div>
+              <div class="info-value"><%= order.address %></div>
             </div>
           </div>
+
+          <!-- Mobile -->
+          <div class="info">
+            <i class="fas fa-phone"></i>
+            <div class="info-content">
+              <div class="info-label">Mobile</div>
+              <div class="info-value"><%= order.mobile_number %></div>
+            </div>
+          </div>
+
+          <!-- Alternate Number -->
+          <% if (order.alternate_number) { %>
+          <div class="info">
+            <i class="fas fa-phone-alt"></i>
+            <div class="info-content">
+              <div class="info-label">Alt Number</div>
+              <div class="info-value"><%= order.alternate_number %></div>
+            </div>
+          </div>
+          <% } %>
+
+          <!-- Payment Method -->
+          <div class="info">
+            <i class="fas fa-money-bill-wave"></i>
+            <div class="info-content">
+              <div class="info-label">Payment</div>
+              <div class="info-value"><%= order.paymentMethod || '—' %></div>
+            </div>
+          </div>
+
+          <!-- Order ID -->
+          <div class="info">
+            <i class="fas fa-receipt"></i>
+            <div class="info-content">
+              <div class="info-label">Order ID</div>
+              <div class="info-value"><%= order.orderId || '—' %></div>
+            </div>
+          </div>
+
+          <!-- Transaction ID -->
+          <div class="info">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <div class="info-content">
+              <div class="info-label">Txn ID</div>
+              <div class="info-value"><%= order.transactionId || '—' %></div>
+            </div>
+          </div>
+
+          <!-- Price -->
+          <div class="info">
+            <i class="fas fa-rupee-sign"></i>
+            <div class="info-content">
+              <div class="info-label">Price</div>
+              <div class="info-value">₹<%= order.price || '—' %></div>
+            </div>
+          </div>
+
+          <!-- Coupon -->
+          <div class="info">
+            <i class="fas fa-tag"></i>
+            <div class="info-content">
+              <div class="info-label">Coupon</div>
+              <div class="info-value"><%= order.coupon || 'None' %></div>
+            </div>
+          </div>
+
+          <!-- Order Date -->
+          <div class="info">
+            <i class="fas fa-calendar-alt"></i>
+            <div class="info-content">
+              <div class="info-label">Ordered On</div>
+              <div class="info-value">
+                <%= order.date ? new Date(order.date).toLocaleString('en-IN', {
+                timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year:
+                'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) :
+                '—' %>
+              </div>
+            </div>
+          </div>
+
+          <div class="btns">
+            <% if (currentTab === 'pending') { %>
+            <form
+              method="POST"
+              action="/admin-portal-1024/cancel/<%= order._id %>"
+              class="action-form"
+              data-type="cancel"
+            >
+              <button type="submit" class="btn cancel">
+                <i class="fas fa-times"></i> Cancel
+              </button>
+            </form>
+            <form
+              method="POST"
+              action="/admin-portal-1024/deliver/<%= order._id %>"
+              class="action-form"
+              data-type="deliver"
+            >
+              <button type="submit" class="btn deliver">
+                <i class="fas fa-truck"></i> Deliver
+              </button>
+            </form>
+            <% } else if (currentTab === 'delivering') { %>
+            <form
+              method="POST"
+              action="/admin-portal-1024/cancel/<%= order._id %>"
+              class="action-form"
+              data-type="cancel"
+            >
+              <button type="submit" class="btn cancel">
+                <i class="fas fa-times"></i> Cancel
+              </button>
+            </form>
+            <form
+              method="POST"
+              action="/admin-portal-1024/done/<%= order._id %>"
+              class="action-form"
+              data-type="complete"
+            >
+              <button type="submit" class="btn deliver">
+                <i class="fas fa-check-circle"></i> Complete
+              </button>
+            </form>
+            <% } else if (currentTab === 'done') { %>
+            <form
+              method="POST"
+              action="/admin-portal-1024/delete/<%= order._id %>"
+              class="action-form"
+              data-type="delete"
+            >
+              <button type="submit" class="btn cancel">
+                <i class="fas fa-trash-alt"></i> Delete
+              </button>
+            </form>
+            <% } %>
+          </div>
+        </div>
         <% }) %>
       </div>
+      <% } %>
+    </div>
+
+    <footer>
+      <p>&copy; 2023 Husn Hira Admin Dashboard. All rights reserved.</p>
+    </footer>
+
+    <% if (chartData) { %>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // ✅ Mobile Menu Toggle
+        const menuToggle = document.getElementById("menuToggle");
+        const closeMenu = document.getElementById("closeMenu");
+        const mobileNav = document.querySelector(".mobile-nav");
+        const mobileOverlay = document.getElementById("mobileOverlay");
+
+        menuToggle?.addEventListener("click", () => {
+          mobileNav?.classList.add("active");
+          mobileOverlay?.classList.add("active");
+          document.body.style.overflow = "hidden";
+        });
+
+        closeMenu?.addEventListener("click", () => {
+          mobileNav?.classList.remove("active");
+          mobileOverlay?.classList.remove("active");
+          document.body.style.overflow = "";
+        });
+
+        mobileOverlay?.addEventListener("click", () => {
+          mobileNav?.classList.remove("active");
+          mobileOverlay?.classList.remove("active");
+          document.body.style.overflow = "";
+        });
+
+        // ✅ SweetAlert Confirmation Dialogs
+        document.querySelectorAll(".action-form").forEach((form) => {
+          form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            const actionType = form.dataset.type;
+            let title = "",
+              text = "",
+              confirmButtonText = "";
+
+            switch (actionType) {
+              case "cancel":
+                title = "Cancel Order?";
+                text =
+                  "Are you sure you want to cancel this order? This action cannot be undone.";
+                confirmButtonText = "Yes, Cancel";
+                break;
+              case "deliver":
+                title = "Start Delivery?";
+                text =
+                  "Are you sure you want to mark this order as delivering?";
+                confirmButtonText = "Yes, Deliver";
+                break;
+              case "complete":
+                title = "Mark as Complete?";
+                text =
+                  "Are you sure you want to mark this delivery as complete?";
+                confirmButtonText = "Yes, Complete";
+                break;
+              case "delete":
+                title = "Delete Record?";
+                text =
+                  "Are you sure you want to permanently delete this order record?";
+                confirmButtonText = "Yes, Delete";
+                break;
+            }
+
+            Swal.fire({
+              title,
+              text,
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText,
+              background: "#fff",
+              backdrop: "rgba(0,0,0,0.4)",
+              customClass: {
+                confirmButton: "swal-confirm-btn",
+                cancelButton: "swal-cancel-btn",
+              },
+            }).then((result) => {
+              if (result.isConfirmed) {
+                form.submit();
+              }
+            });
+          });
+        });
+
+        // ✅ Clear History Confirmation
+        const clearHistoryForm = document.getElementById("clearHistoryForm");
+        if (clearHistoryForm) {
+          clearHistoryForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            Swal.fire({
+              title: "Clear All History?",
+              text: "Are you sure you want to clear all order history? This action cannot be undone!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, Clear History",
+              background: "#fff",
+              backdrop: "rgba(0,0,0,0.4)",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                clearHistoryForm.submit();
+              }
+            });
+          });
+        }
+
+        // ✅ Chart.js Initialization
+        const chartEl = document.getElementById("chart-data");
+        const labels = JSON.parse(chartEl?.dataset.labels || "[]");
+        const ordersData = JSON.parse(chartEl?.dataset.orders || "[]");
+        const revenueData = JSON.parse(chartEl?.dataset.revenue || "[]");
+
+        const ctx = document.getElementById("orderChart")?.getContext("2d");
+        if (ctx && labels.length > 0) {
+          new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: "Orders",
+                  data: ordersData,
+                  borderColor: "#ff6b8b",
+                  backgroundColor: "rgba(255, 107, 139, 0.1)",
+                  borderWidth: 3,
+                  tension: 0.4,
+                  fill: true,
+                },
+                {
+                  label: "Revenue (₹)",
+                  data: revenueData,
+                  borderColor: "#6c63ff",
+                  backgroundColor: "rgba(108, 99, 255, 0.1)",
+                  borderWidth: 3,
+                  tension: 0.4,
+                  fill: true,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: "top",
+                  labels: {
+                    font: { size: 14 },
+                    usePointStyle: true,
+                    padding: 20,
+                  },
+                },
+                tooltip: {
+                  backgroundColor: "rgba(255, 255, 255, 0.9)",
+                  titleColor: "#333",
+                  bodyColor: "#666",
+                  borderColor: "#eee",
+                  borderWidth: 1,
+                  padding: 12,
+                  usePointStyle: true,
+                  boxPadding: 6,
+                  callbacks: {
+                    label: function (context) {
+                      let label = context.dataset.label || "";
+                      if (label) label += ": ";
+                      if (context.parsed.y !== null) {
+                        if (context.dataset.label.includes("Revenue")) {
+                          label += new Intl.NumberFormat("en-IN", {
+                            style: "currency",
+                            currency: "INR",
+                          }).format(context.parsed.y);
+                        } else {
+                          label += context.parsed.y;
+                        }
+                      }
+                      return label;
+                    },
+                  },
+                },
+              },
+              scales: {
+                x: {
+                  grid: { display: false },
+                  ticks: { font: { size: 12 } },
+                },
+                y: {
+                  beginAtZero: true,
+                  grid: { color: "rgba(0, 0, 0, 0.05)" },
+                  ticks: {
+                    font: { size: 12 },
+                    callback: function (value) {
+                      return value.toLocaleString();
+                    },
+                  },
+                },
+              },
+              interaction: {
+                mode: "index",
+                intersect: false,
+              },
+              hover: {
+                mode: "nearest",
+                intersect: true,
+              },
+            },
+          });
+        }
+      });
+    </script>
     <% } %>
-  </div>
-
-  <footer>
-    <p>&copy; 2023 Husn Hira Admin Dashboard. All rights reserved.</p>
-  </footer>
-
- <% if (chartData) { %>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // ✅ Mobile Menu Toggle
-    const menuToggle = document.getElementById('menuToggle');
-    const closeMenu = document.getElementById('closeMenu');
-    const mobileNav = document.querySelector('.mobile-nav');
-    const mobileOverlay = document.getElementById('mobileOverlay');
-
-    menuToggle?.addEventListener('click', () => {
-      mobileNav?.classList.add('active');
-      mobileOverlay?.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    });
-
-    closeMenu?.addEventListener('click', () => {
-      mobileNav?.classList.remove('active');
-      mobileOverlay?.classList.remove('active');
-      document.body.style.overflow = '';
-    });
-
-    mobileOverlay?.addEventListener('click', () => {
-      mobileNav?.classList.remove('active');
-      mobileOverlay?.classList.remove('active');
-      document.body.style.overflow = '';
-    });
-
-    // ✅ SweetAlert Confirmation Dialogs
-    document.querySelectorAll('.action-form').forEach(form => {
-      form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const actionType = form.dataset.type;
-        let title = '', text = '', confirmButtonText = '';
-
-        switch (actionType) {
-          case 'cancel':
-            title = 'Cancel Order?';
-            text = 'Are you sure you want to cancel this order? This action cannot be undone.';
-            confirmButtonText = 'Yes, Cancel';
-            break;
-          case 'deliver':
-            title = 'Start Delivery?';
-            text = 'Are you sure you want to mark this order as delivering?';
-            confirmButtonText = 'Yes, Deliver';
-            break;
-          case 'complete':
-            title = 'Mark as Complete?';
-            text = 'Are you sure you want to mark this delivery as complete?';
-            confirmButtonText = 'Yes, Complete';
-            break;
-          case 'delete':
-            title = 'Delete Record?';
-            text = 'Are you sure you want to permanently delete this order record?';
-            confirmButtonText = 'Yes, Delete';
-            break;
-        }
-
-        Swal.fire({
-          title,
-          text,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText,
-          background: '#fff',
-          backdrop: 'rgba(0,0,0,0.4)',
-          customClass: {
-            confirmButton: 'swal-confirm-btn',
-            cancelButton: 'swal-cancel-btn'
-          }
-        }).then((result) => {
-          if (result.isConfirmed) {
-            form.submit();
-          }
-        });
-      });
-    });
-
-    // ✅ Clear History Confirmation
-    const clearHistoryForm = document.getElementById('clearHistoryForm');
-    if (clearHistoryForm) {
-      clearHistoryForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        Swal.fire({
-          title: 'Clear All History?',
-          text: 'Are you sure you want to clear all order history? This action cannot be undone!',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'Yes, Clear History',
-          background: '#fff',
-          backdrop: 'rgba(0,0,0,0.4)'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            clearHistoryForm.submit();
-          }
-        });
-      });
-    }
-
-    // ✅ Chart.js Initialization
-    const chartEl = document.getElementById('chart-data');
-    const labels = JSON.parse(chartEl?.dataset.labels || '[]');
-    const ordersData = JSON.parse(chartEl?.dataset.orders || '[]');
-    const revenueData = JSON.parse(chartEl?.dataset.revenue || '[]');
-
-    const ctx = document.getElementById('orderChart')?.getContext('2d');
-    if (ctx && labels.length > 0) {
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: 'Orders',
-              data: ordersData,
-              borderColor: '#ff6b8b',
-              backgroundColor: 'rgba(255, 107, 139, 0.1)',
-              borderWidth: 3,
-              tension: 0.4,
-              fill: true
-            },
-            {
-              label: 'Revenue (₹)',
-              data: revenueData,
-              borderColor: '#6c63ff',
-              backgroundColor: 'rgba(108, 99, 255, 0.1)',
-              borderWidth: 3,
-              tension: 0.4,
-              fill: true
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'top',
-              labels: {
-                font: { size: 14 },
-                usePointStyle: true,
-                padding: 20
-              }
-            },
-            tooltip: {
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              titleColor: '#333',
-              bodyColor: '#666',
-              borderColor: '#eee',
-              borderWidth: 1,
-              padding: 12,
-              usePointStyle: true,
-              boxPadding: 6,
-              callbacks: {
-                label: function (context) {
-                  let label = context.dataset.label || '';
-                  if (label) label += ': ';
-                  if (context.parsed.y !== null) {
-                    if (context.dataset.label.includes('Revenue')) {
-                      label += new Intl.NumberFormat('en-IN', {
-                        style: 'currency',
-                        currency: 'INR'
-                      }).format(context.parsed.y);
-                    } else {
-                      label += context.parsed.y;
-                    }
-                  }
-                  return label;
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: { font: { size: 12 } }
-            },
-            y: {
-              beginAtZero: true,
-              grid: { color: 'rgba(0, 0, 0, 0.05)' },
-              ticks: {
-                font: { size: 12 },
-                callback: function (value) {
-                  return value.toLocaleString();
-                }
-              }
-            }
-          },
-          interaction: {
-            mode: 'index',
-            intersect: false
-          },
-          hover: {
-            mode: 'nearest',
-            intersect: true
-          }
-        }
-      });
-    }
-  });
-</script>
-<% } %>
-
-</body>
+  </body>
 </html>
