@@ -213,7 +213,7 @@
         <div class="info-content">
           <div class="info-label">Ordered On</div>
           <div class="info-value">
-            <%= order.date ? order.date.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—' %>
+              <%= order.date ? order.date.toLocaleDateString('en-IN', { dateStyle: 'medium' }) : '—' %>
           </div>
         </div>
       </div>
