@@ -29,7 +29,6 @@ document.getElementById("buyBtn")?.addEventListener("click", async function (e) 
   e.preventDefault();
   const buyBtn = document.getElementById("buyBtn");
 
-  // ✅ Get form values
   const name = document.getElementById("name")?.value.trim();
   const address = document.getElementById("address")?.value.trim();
   const mobile = document.getElementById("mobile")?.value.trim();
@@ -38,7 +37,6 @@ document.getElementById("buyBtn")?.addEventListener("click", async function (e) 
   const termsAccepted = document.getElementById("terms")?.checked;
   const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
 
-  // ✅ Validation
   if (!name || name.length < 3) {
     return Swal.fire('Invalid Name', 'Please enter a valid name.', 'warning');
   }
@@ -48,6 +46,9 @@ document.getElementById("buyBtn")?.addEventListener("click", async function (e) 
   if (!/^\d{10}$/.test(mobile)) {
     return Swal.fire('Invalid Mobile', 'Enter a valid 10-digit mobile number.', 'warning');
   }
+  if (!isMobileVerified) {
+    return Swal.fire('Mobile Not Verified', 'Please verify your mobile number before placing the order.', 'warning');
+  }
   if (alternate && !/^\d{10}$/.test(alternate)) {
     return Swal.fire('Invalid Alternate Number', 'Enter a valid 10-digit alternate number.', 'warning');
   }
@@ -55,7 +56,6 @@ document.getElementById("buyBtn")?.addEventListener("click", async function (e) 
     return Swal.fire('Terms Not Accepted', 'Please accept Terms & Conditions to continue.', 'warning');
   }
 
-  // ✅ COD Flow with Confirmation
   if (paymentMethod === "COD") {
     const confirmed = await Swal.fire({
       title: "Confirm Your COD Order",
@@ -232,4 +232,98 @@ document.getElementById("refresh-btn")?.addEventListener("click", () => {
   document.getElementById("search").value = "";
   document.getElementById("date").value = "";
   window.location.href = window.location.pathname;
+});
+
+// ✅ OTP Verification Logic
+let isMobileVerified = false;
+
+const sendOtpBtn = document.getElementById("sendOtpBtn");
+const verifyOtpBtn = document.getElementById("verifyOtpBtn");
+const otpSection = document.getElementById("otp-section");
+const otpInput = document.getElementById("otp-input");
+const otpStatus = document.getElementById("otp-status");
+const mobileInput = document.getElementById("mobile");
+
+sendOtpBtn?.addEventListener("click", async () => {
+  const mobile = mobileInput.value.trim();
+  if (!/^\d{10}$/.test(mobile)) {
+    return Swal.fire("Invalid Mobile", "Enter a valid 10-digit mobile number.", "warning");
+  }
+
+  sendOtpBtn.disabled = true;
+  sendOtpBtn.innerText = "Sending...";
+
+  try {
+    const res = await fetch("/api/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mobile }),
+    });
+
+    const data = await res.json();
+    sendOtpBtn.disabled = false;
+    sendOtpBtn.innerText = "Resend OTP";
+
+    if (data.success) {
+      otpSection.classList.remove("hidden");
+      otpSection.classList.add("active");
+      Swal.fire("OTP Sent", "Check your mobile for the OTP.", "success");
+    } else {
+      Swal.fire("Failed", data.message || "Could not send OTP.", "error");
+    }
+  } catch (err) {
+    sendOtpBtn.disabled = false;
+    sendOtpBtn.innerText = "Verify";
+    Swal.fire("Error", "Could not send OTP. Try again later.", "error");
+  }
+});
+
+verifyOtpBtn?.addEventListener("click", async () => {
+  const otp = otpInput.value.trim();
+  const mobile = mobileInput.value.trim();
+
+  if (!otp || otp.length !== 6) {
+    return Swal.fire("Invalid OTP", "Enter the 6-digit OTP you received.", "warning");
+  }
+
+  verifyOtpBtn.disabled = true;
+  verifyOtpBtn.innerText = "Verifying...";
+
+  try {
+    const res = await fetch("/api/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mobile, otp }),
+    });
+
+    const data = await res.json();
+    verifyOtpBtn.disabled = false;
+    verifyOtpBtn.innerText = "Verified";
+
+    if (data.success) {
+      isMobileVerified = true;
+      otpStatus.innerText = "✔ Mobile Verified";
+      otpStatus.classList.add("success");
+      otpStatus.classList.remove("error");
+      otpInput.disabled = true;
+      verifyOtpBtn.disabled = true;
+      sendOtpBtn.disabled = true;
+      mobileInput.disabled = true;
+
+      // Optional auto-hide
+      setTimeout(() => {
+        otpSection.classList.remove("active");
+        otpSection.classList.add("hidden");
+      }, 1500);
+    } else {
+      isMobileVerified = false;
+      otpStatus.innerText = "❌ Incorrect OTP";
+      otpStatus.classList.add("error");
+      otpStatus.classList.remove("success");
+    }
+  } catch (err) {
+    verifyOtpBtn.disabled = false;
+    verifyOtpBtn.innerText = "Confirm OTP";
+    Swal.fire("Error", "Could not verify OTP. Try again.", "error");
+  }
 });

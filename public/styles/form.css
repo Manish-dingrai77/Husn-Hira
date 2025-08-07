@@ -706,3 +706,188 @@ footer {
 .hidden {
   display: none;
 }
+
+.verify-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.verify-btn {
+  margin-left: 10px;
+  padding: 6px 12px;
+  background-color: #ffe6e6;
+  color: #cc3366;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.verify-btn:hover {
+  background-color: #ffccd5;
+}
+
+.otp-section {
+  display: none;
+  margin-top: 10px;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.otp-section.active {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+#otp-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.confirm-otp-btn {
+  padding: 6px 12px;
+  background-color: #d4f4dd;
+  color: #218838;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.confirm-otp-btn:hover {
+  background-color: #c0ebc8;
+}
+
+.otp-status {
+  margin-left: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.otp-status.success {
+  color: green;
+}
+
+.otp-status.error {
+  color: red;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* OTP Modern Styling */
+.verify-wrapper {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.modern-verify-btn {
+  position: relative;
+  background: linear-gradient(135deg, #ff8a8a, #e86b6b);
+  border: none;
+  color: #fff;
+  padding: 8px 16px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.modern-verify-btn:hover {
+  background: linear-gradient(135deg, #ff6a6a, #e84848);
+  transform: translateY(-2px);
+}
+
+.modern-verify-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Loader animation inside button */
+.btn-loader {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: none;
+  margin-left: 8px;
+}
+
+.modern-verify-btn.loading .btn-text {
+  display: none;
+}
+.modern-verify-btn.loading .btn-loader {
+  display: inline-block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Modern OTP section */
+.modern-otp {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.modern-otp input {
+  width: 120px;
+  padding: 10px;
+  border: 2px solid #e86b6b;
+  border-radius: 6px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.modern-otp input:focus {
+  border-color: #ff4d4d;
+}
+
+/* OTP status text */
+.otp-status {
+  margin-left: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.otp-section.hidden {
+  display: none !important;
+}

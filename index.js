@@ -9,6 +9,7 @@ const dotenv = require("dotenv");
 const Joi = require("joi");
 const helmet = require("helmet");
 const MongoStore = require("connect-mongo");
+const otpRoutes = require("./routes/otp.routes");
 
 const sanitize = require("./middlewares/sanitize"); // custom sanitizer
 
@@ -105,6 +106,7 @@ const adminRoutes = require("./routes/admin.routes");
 
 app.use("/api", paymentRoutes);
 app.use("/admin-portal-1024", adminRoutes);
+app.use("/api", otpRoutes);
 
 // ✅ Step 10: Static Frontend Pages with Razorpay Key
 app.get("/", (req, res) => res.render("home"));
