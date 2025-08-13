@@ -891,3 +891,8 @@ footer {
 .otp-section.hidden {
   display: none !important;
 }
+
+/* Add spacing below mobile input */
+#mobile {
+  margin-bottom: 20px; /* Adjust px as needed */
+}

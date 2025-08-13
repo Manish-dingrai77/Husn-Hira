@@ -83,3 +83,5 @@ exports.verifyOtp = (req, res) => {
     return res.status(500).json({ success: false, message: "OTP verification failed" });
   }
 };
+
+

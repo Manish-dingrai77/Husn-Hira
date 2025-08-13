@@ -46,9 +46,9 @@ document.getElementById("buyBtn")?.addEventListener("click", async function (e) 
   if (!/^\d{10}$/.test(mobile)) {
     return Swal.fire('Invalid Mobile', 'Enter a valid 10-digit mobile number.', 'warning');
   }
-  if (!isMobileVerified) {
-    return Swal.fire('Mobile Not Verified', 'Please verify your mobile number before placing the order.', 'warning');
-  }
+  // if (!isMobileVerified) {
+  //   return Swal.fire('Mobile Not Verified', 'Please verify your mobile number before placing the order.', 'warning');
+  // }
   if (alternate && !/^\d{10}$/.test(alternate)) {
     return Swal.fire('Invalid Alternate Number', 'Enter a valid 10-digit alternate number.', 'warning');
   }
@@ -235,95 +235,95 @@ document.getElementById("refresh-btn")?.addEventListener("click", () => {
 });
 
 // ✅ OTP Verification Logic
-let isMobileVerified = false;
+// let isMobileVerified = false;
 
-const sendOtpBtn = document.getElementById("sendOtpBtn");
-const verifyOtpBtn = document.getElementById("verifyOtpBtn");
-const otpSection = document.getElementById("otp-section");
-const otpInput = document.getElementById("otp-input");
-const otpStatus = document.getElementById("otp-status");
-const mobileInput = document.getElementById("mobile");
+// const sendOtpBtn = document.getElementById("sendOtpBtn");
+// const verifyOtpBtn = document.getElementById("verifyOtpBtn");
+// const otpSection = document.getElementById("otp-section");
+// const otpInput = document.getElementById("otp-input");
+// const otpStatus = document.getElementById("otp-status");
+// const mobileInput = document.getElementById("mobile");
 
-sendOtpBtn?.addEventListener("click", async () => {
-  const mobile = mobileInput.value.trim();
-  if (!/^\d{10}$/.test(mobile)) {
-    return Swal.fire("Invalid Mobile", "Enter a valid 10-digit mobile number.", "warning");
-  }
+// sendOtpBtn?.addEventListener("click", async () => {
+//   const mobile = mobileInput.value.trim();
+//   if (!/^\d{10}$/.test(mobile)) {
+//     return Swal.fire("Invalid Mobile", "Enter a valid 10-digit mobile number.", "warning");
+//   }
 
-  sendOtpBtn.disabled = true;
-  sendOtpBtn.innerText = "Sending...";
+//   sendOtpBtn.disabled = true;
+//   sendOtpBtn.innerText = "Sending...";
 
-  try {
-    const res = await fetch("/api/send-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile }),
-    });
+//   try {
+//     const res = await fetch("/api/send-otp", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({ mobile }),
+//     });
 
-    const data = await res.json();
-    sendOtpBtn.disabled = false;
-    sendOtpBtn.innerText = "Resend OTP";
+//     const data = await res.json();
+//     sendOtpBtn.disabled = false;
+//     sendOtpBtn.innerText = "Resend OTP";
 
-    if (data.success) {
-      otpSection.classList.remove("hidden");
-      otpSection.classList.add("active");
-      Swal.fire("OTP Sent", "Check your mobile for the OTP.", "success");
-    } else {
-      Swal.fire("Failed", data.message || "Could not send OTP.", "error");
-    }
-  } catch (err) {
-    sendOtpBtn.disabled = false;
-    sendOtpBtn.innerText = "Verify";
-    Swal.fire("Error", "Could not send OTP. Try again later.", "error");
-  }
-});
+//     if (data.success) {
+//       otpSection.classList.remove("hidden");
+//       otpSection.classList.add("active");
+//       Swal.fire("OTP Sent", "Check your mobile for the OTP.", "success");
+//     } else {
+//       Swal.fire("Failed", data.message || "Could not send OTP.", "error");
+//     }
+//   } catch (err) {
+//     sendOtpBtn.disabled = false;
+//     sendOtpBtn.innerText = "Verify";
+//     Swal.fire("Error", "Could not send OTP. Try again later.", "error");
+//   }
+// });
 
-verifyOtpBtn?.addEventListener("click", async () => {
-  const otp = otpInput.value.trim();
-  const mobile = mobileInput.value.trim();
+// verifyOtpBtn?.addEventListener("click", async () => {
+//   const otp = otpInput.value.trim();
+//   const mobile = mobileInput.value.trim();
 
-  if (!otp || otp.length !== 6) {
-    return Swal.fire("Invalid OTP", "Enter the 6-digit OTP you received.", "warning");
-  }
+//   if (!otp || otp.length !== 6) {
+//     return Swal.fire("Invalid OTP", "Enter the 6-digit OTP you received.", "warning");
+//   }
 
-  verifyOtpBtn.disabled = true;
-  verifyOtpBtn.innerText = "Verifying...";
+//   verifyOtpBtn.disabled = true;
+//   verifyOtpBtn.innerText = "Verifying...";
 
-  try {
-    const res = await fetch("/api/verify-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile, otp }),
-    });
+//   try {
+//     const res = await fetch("/api/verify-otp", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({ mobile, otp }),
+//     });
 
-    const data = await res.json();
-    verifyOtpBtn.disabled = false;
-    verifyOtpBtn.innerText = "Verified";
+//     const data = await res.json();
+//     verifyOtpBtn.disabled = false;
+//     verifyOtpBtn.innerText = "Verified";
 
-    if (data.success) {
-      isMobileVerified = true;
-      otpStatus.innerText = "✔ Mobile Verified";
-      otpStatus.classList.add("success");
-      otpStatus.classList.remove("error");
-      otpInput.disabled = true;
-      verifyOtpBtn.disabled = true;
-      sendOtpBtn.disabled = true;
-      mobileInput.disabled = true;
+//     if (data.success) {
+//       isMobileVerified = true;
+//       otpStatus.innerText = "✔ Mobile Verified";
+//       otpStatus.classList.add("success");
+//       otpStatus.classList.remove("error");
+//       otpInput.disabled = true;
+//       verifyOtpBtn.disabled = true;
+//       sendOtpBtn.disabled = true;
+//       mobileInput.disabled = true;
 
-      // Optional auto-hide
-      setTimeout(() => {
-        otpSection.classList.remove("active");
-        otpSection.classList.add("hidden");
-      }, 1500);
-    } else {
-      isMobileVerified = false;
-      otpStatus.innerText = "❌ Incorrect OTP";
-      otpStatus.classList.add("error");
-      otpStatus.classList.remove("success");
-    }
-  } catch (err) {
-    verifyOtpBtn.disabled = false;
-    verifyOtpBtn.innerText = "Confirm OTP";
-    Swal.fire("Error", "Could not verify OTP. Try again.", "error");
-  }
-});
+//       // Optional auto-hide
+//       setTimeout(() => {
+//         otpSection.classList.remove("active");
+//         otpSection.classList.add("hidden");
+//       }, 1500);
+//     } else {
+//       isMobileVerified = false;
+//       otpStatus.innerText = "❌ Incorrect OTP";
+//       otpStatus.classList.add("error");
+//       otpStatus.classList.remove("success");
+//     }
+//   } catch (err) {
+//     verifyOtpBtn.disabled = false;
+//     verifyOtpBtn.innerText = "Confirm OTP";
+//     Swal.fire("Error", "Could not verify OTP. Try again.", "error");
+//   }
+// });
