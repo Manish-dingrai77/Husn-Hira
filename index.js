@@ -33,7 +33,7 @@ if (error) {
 }
 
 // ✅ Step 2: Connect MongoDB
-mongoose.conect(envVars.MOGO_URI)
+mongoose.connect(envVars.MOGO_URI)
   .then(() => console.log("✅ MongoDB connected"))
   .catch(err => {
     console.error("❌ MongoDB connection error:", err);
